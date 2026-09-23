@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Facility } from '@/types';
-import { X, Navigation2, Clock, CheckCircle2, AlertTriangle, Lock, DropletOff, Accessibility, ShieldCheck, Flag, WifiOff } from 'lucide-react';
+import { X, Navigation2, Clock, CheckCircle2, AlertTriangle, Lock, DropletOff, Accessibility, ShieldCheck, Flag, WifiOff, Droplet, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import ReportForm from '@/components/reports/ReportForm';
 import TicketSuccess from '@/components/reports/TicketSuccess';
@@ -100,7 +100,19 @@ export default function FacilityDetails({ facility, onClose }: FacilityDetailsPr
             <div>
               <h2 className="text-xl font-bold text-gray-900 pr-2">{facility.name}</h2>
               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mt-2">
-                <span className="font-medium text-gray-700">{facility.type === 'toilet' ? '🚻 Public Toilet' : '💧 Drinking Water'}</span>
+                <span className="font-medium text-gray-700 inline-flex items-center">
+                  {facility.type === 'toilet' ? (
+                    <>
+                      <Users className="w-4 h-4 mr-1 text-blue-600" />
+                      <span>Public Toilet</span>
+                    </>
+                  ) : (
+                    <>
+                      <Droplet className="w-4 h-4 mr-1 text-blue-600 fill-blue-600" />
+                      <span>Drinking Water</span>
+                    </>
+                  )}
+                </span>
                 {facility.distanceMeters !== undefined && (
                   <>
                     <span className="w-1 h-1 bg-gray-300 rounded-full"></span>

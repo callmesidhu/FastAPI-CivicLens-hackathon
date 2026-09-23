@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { MapPin, Navigation, ArrowRight, ShieldCheck, Flame, Layers } from 'lucide-react';
+import { MapPin, Navigation, ArrowRight, ShieldCheck, Flame, Layers, Droplet, Users, Satellite } from 'lucide-react';
 
 export default function MapPreviewCta() {
   return (
@@ -37,23 +37,23 @@ export default function MapPreviewCta() {
 
           {/* Features Pills */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
-            <div className="bg-white/10 backdrop-blur-xs border border-white/10 rounded-2xl p-3 text-center">
-              <div className="text-lg mb-0.5">💧</div>
+            <div className="bg-white/10 backdrop-blur-xs border border-white/10 rounded-2xl p-3 text-center flex flex-col items-center">
+              <Droplet className="w-5 h-5 text-blue-300 mb-1 fill-blue-300" />
               <div className="text-xs font-bold text-white">Water Points</div>
               <div className="text-[10px] text-blue-200">Verified Safe</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-xs border border-white/10 rounded-2xl p-3 text-center">
-              <div className="text-lg mb-0.5">🚻</div>
+            <div className="bg-white/10 backdrop-blur-xs border border-white/10 rounded-2xl p-3 text-center flex flex-col items-center">
+              <Users className="w-5 h-5 text-cyan-300 mb-1" />
               <div className="text-xs font-bold text-white">Public Toilets</div>
               <div className="text-[10px] text-blue-200">Accessible &amp; Clean</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-xs border border-white/10 rounded-2xl p-3 text-center">
-              <div className="text-lg mb-0.5">🛰️</div>
+            <div className="bg-white/10 backdrop-blur-xs border border-white/10 rounded-2xl p-3 text-center flex flex-col items-center">
+              <Satellite className="w-5 h-5 text-purple-300 mb-1" />
               <div className="text-xs font-bold text-white">Satellite View</div>
               <div className="text-[10px] text-blue-200">Esri World Imagery</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-xs border border-white/10 rounded-2xl p-3 text-center">
-              <div className="text-lg mb-0.5">🔥</div>
+            <div className="bg-white/10 backdrop-blur-xs border border-white/10 rounded-2xl p-3 text-center flex flex-col items-center">
+              <Flame className="w-5 h-5 text-amber-300 mb-1" />
               <div className="text-xs font-bold text-white">Hotspots</div>
               <div className="text-[10px] text-blue-200">Real-time Detection</div>
             </div>

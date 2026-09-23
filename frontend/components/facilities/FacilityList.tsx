@@ -1,5 +1,5 @@
 import { Facility } from '@/types';
-import { Droplet, CheckCircle2, AlertTriangle, Lock, DropletOff, Accessibility } from 'lucide-react';
+import { Droplet, CheckCircle2, AlertTriangle, Lock, DropletOff, Accessibility, Users, Search } from 'lucide-react';
 
 interface FacilityListProps {
   facilities: Facility[];
@@ -53,7 +53,17 @@ export default function FacilityList({ facilities, selectedFacility, onSelectFac
               </div>
               
               <div className="flex items-center text-sm text-gray-600 mb-3">
-                {facility.type === 'toilet' ? '🚻 Public Toilet' : '💧 Drinking Water'}
+                {facility.type === 'toilet' ? (
+                  <>
+                    <Users className="w-4 h-4 mr-1.5 text-blue-600" />
+                    <span>Public Toilet</span>
+                  </>
+                ) : (
+                  <>
+                    <Droplet className="w-4 h-4 mr-1.5 text-blue-600 fill-blue-600" />
+                    <span>Drinking Water</span>
+                  </>
+                )}
               </div>
               
               <div className="flex flex-wrap gap-2">
@@ -89,7 +99,7 @@ export default function FacilityList({ facilities, selectedFacility, onSelectFac
         
         {facilities.length === 0 && (
           <div className="p-8 text-center text-gray-500">
-            <p className="mb-2 text-4xl">🔍</p>
+            <Search className="w-8 h-8 mx-auto mb-2 text-gray-400" />
             <p>No facilities found.</p>
             <p className="text-sm mt-1">Try expanding your search radius or changing filters.</p>
           </div>

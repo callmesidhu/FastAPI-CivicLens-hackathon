@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Facility } from '@/types';
 import { submitReport, uploadImage } from '@/lib/api';
-import { X, AlertCircle, Camera, Image as ImageIcon } from 'lucide-react';
+import { X, AlertCircle, Camera, Image as ImageIcon, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 
 interface ReportFormProps {
@@ -157,7 +157,7 @@ export default function ReportForm({ facility, onClose, onSuccess }: ReportFormP
           </div>
           
           <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 flex items-start">
-            <span className="text-xl mr-2 mt-[-2px]">🛡️</span>
+            <ShieldCheck className="w-5 h-5 mr-2 text-emerald-600 shrink-0 mt-0.5" />
             <p className="text-xs text-gray-600 leading-relaxed">
               This report is completely <span className="font-bold">anonymous</span>. We do not store your name or track your personal history. Help keep facility information accurate for everyone.
             </p>

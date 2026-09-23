@@ -204,8 +204,8 @@ export default function CivicDashboardCard({
             className="w-full bg-gray-50/70 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-blue-500 focus:bg-white transition"
           >
             <option value="all">All Facilities</option>
-            <option value="water">💧 Drinking Water Points</option>
-            <option value="toilet">🚻 Public Toilets</option>
+            <option value="water">Drinking Water Points</option>
+            <option value="toilet">Public Sanitation / Toilets</option>
           </select>
         </div>
 

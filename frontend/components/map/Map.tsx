@@ -5,7 +5,7 @@ import * as maplibregl from 'maplibre-gl';
 import Map, { Marker, NavigationControl, GeolocateControl, MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Facility } from '@/types';
-import { Droplet, MapPin, LocateFixed, Navigation, AlertTriangle, AlertCircle, X, Flame } from 'lucide-react';
+import { Droplet, MapPin, LocateFixed, Navigation, AlertTriangle, AlertCircle, X, Flame, Users, Satellite, Map as MapIcon } from 'lucide-react';
 
 interface CivicMapProps {
   facilities: Facility[];
@@ -194,9 +194,7 @@ export default function CivicMap({
                   title={facility.name}
                 >
                   {facility.type === 'toilet' ? (
-                    <div className={`font-bold ${getMarkerColor(facility.condition)} text-base sm:text-lg leading-none`}>
-                      🚻
-                    </div>
+                    <Users className={`w-4 h-4 sm:w-5 sm:h-5 ${getMarkerColor(facility.condition)}`} />
                   ) : (
                     <Droplet className={`w-4 h-4 sm:w-5 sm:h-5 ${getMarkerColor(facility.condition)} fill-current`} />
                   )}
@@ -216,23 +214,25 @@ export default function CivicMap({
         <div className="bg-white/95 backdrop-blur-xs p-1 rounded-full shadow-xl border border-gray-200/90 flex items-center space-x-1">
           <button
             onClick={() => setMapMode('satellite')}
-            className={`flex items-center space-x-1 px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
               mapMode === 'satellite'
                 ? 'bg-blue-600 text-white shadow-xs'
                 : 'text-gray-700 hover:text-blue-600'
             }`}
           >
-            <span>🛰️ Satellite</span>
+            <Satellite className="w-3.5 h-3.5" />
+            <span>Satellite</span>
           </button>
           <button
             onClick={() => setMapMode('street')}
-            className={`flex items-center space-x-1 px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
               mapMode === 'street'
                 ? 'bg-blue-600 text-white shadow-xs'
                 : 'text-gray-700 hover:text-blue-600'
             }`}
           >
-            <span>🗺️ Street</span>
+            <MapIcon className="w-3.5 h-3.5" />
+            <span>Street</span>
           </button>
         </div>
 

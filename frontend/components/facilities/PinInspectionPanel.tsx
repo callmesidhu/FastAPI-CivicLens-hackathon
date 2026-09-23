@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Facility } from '@/types';
-import { Info, MapPin, CheckCircle2, AlertTriangle, Lock, DropletOff, Accessibility, Navigation, ShieldCheck, Flag, Clock } from 'lucide-react';
+import { Info, MapPin, CheckCircle2, AlertTriangle, Lock, DropletOff, Accessibility, Navigation, ShieldCheck, Flag, Clock, Droplet, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface PinInspectionPanelProps {
@@ -88,8 +88,18 @@ export default function PinInspectionPanel({
         {/* Facility Name & Type */}
         <div className="mb-4">
           <div className="flex items-center space-x-2 mb-1.5">
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-              {facility.type === 'toilet' ? '🚻 Public Sanitation' : '💧 Drinking Water'}
+            <span className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+              {facility.type === 'toilet' ? (
+                <>
+                  <Users className="w-3.5 h-3.5 mr-1 text-blue-600" />
+                  <span>Public Sanitation</span>
+                </>
+              ) : (
+                <>
+                  <Droplet className="w-3.5 h-3.5 mr-1 text-blue-600 fill-blue-600" />
+                  <span>Drinking Water</span>
+                </>
+              )}
             </span>
             {facility.accessibility?.wheelchairAccessible && (
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100 flex items-center space-x-1">
