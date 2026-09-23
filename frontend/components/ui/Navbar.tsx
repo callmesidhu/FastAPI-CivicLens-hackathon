@@ -24,7 +24,7 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Brand */}
           <Link href="/" className="flex items-center space-x-3 hover:opacity-90 transition">
-            <div className="w-10 h-10 rounded-xl bg-white border border-[#BB99CD]/40 flex items-center justify-center shadow-xs overflow-hidden">
+            <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
               <img src="/logo.png" alt="CivicLens Logo" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
@@ -32,7 +32,7 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
                 <span className="text-xl font-black tracking-tight text-[#3D1860]">CIVICLENS</span>
               </div>
               <span className="text-xs text-gray-500 font-medium hidden sm:inline-block">
-                Neighborhood Intelligence &amp; Response Assistant
+                Find • Report • Improve
               </span>
             </div>
           </Link>

@@ -60,7 +60,7 @@ export default function CivicDashboardCard({
       {/* Inner Banner */}
       <div className="bg-[#F5EDF7] border border-[#BB99CD]/40 rounded-2xl p-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-3.5">
-          <div className="w-10 h-10 rounded-xl bg-white border border-[#BB99CD]/40 flex items-center justify-center shadow-2xs overflow-hidden p-1">
+          <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
             <img src="/logo.png" alt="CivicLens" className="w-full h-full object-contain" />
           </div>
           <div>

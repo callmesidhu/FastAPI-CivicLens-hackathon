@@ -143,6 +143,7 @@ export default function CivicMap({
         {...viewState}
         onMove={evt => setViewState(evt.viewState)}
         mapStyle={activeMapStyle}
+        attributionControl={false}
         style={{ width: '100%', height: '100%' }}
       >
         <NavigationControl position="bottom-right" />
