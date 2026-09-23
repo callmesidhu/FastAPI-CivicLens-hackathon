@@ -1,9 +1,10 @@
-// CivicLens Service Worker
+// CivicLens Service Worker v2
 // Strategy: Network-first for API calls, Cache-first for static assets, Stale-while-revalidate for pages
 
-const CACHE_NAME = 'civiclens-v1';
-const RUNTIME_CACHE = 'civiclens-runtime-v1';
-const MAP_TILE_CACHE = 'civiclens-tiles-v1';
+const CACHE_NAME = 'civiclens-v2';
+const RUNTIME_CACHE = 'civiclens-runtime-v2';
+const MAP_TILE_CACHE = 'civiclens-tiles-v2';
+const API_CACHE = 'civiclens-api-v2';          // Dedicated cache for facility/ticket API responses
 
 // Static shell assets to precache on install
 const PRECACHE_URLS = [
@@ -15,7 +16,7 @@ const PRECACHE_URLS = [
   '/favicon.ico',
 ];
 
-// Install: precache shell
+// ─── Install ──────────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -26,80 +27,121 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate: clean old caches
+// ─── Activate ─────────────────────────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
-  const allowedCaches = [CACHE_NAME, RUNTIME_CACHE, MAP_TILE_CACHE];
+  const allowedCaches = [CACHE_NAME, RUNTIME_CACHE, MAP_TILE_CACHE, API_CACHE];
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
         keys
           .filter((key) => !allowedCaches.includes(key))
-          .map((key) => caches.delete(key))
+          .map((key) => {
+            console.log('[SW] Deleting old cache:', key);
+            return caches.delete(key);
+          })
       )
     ).then(() => self.clients.claim())
   );
 });
 
-// Fetch: smart routing
+// ─── Fetch Router ─────────────────────────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests (POST, etc.)
+  // Skip non-GET and non-http
   if (request.method !== 'GET') return;
-
-  // Skip chrome-extension, ws, etc.
   if (!url.protocol.startsWith('http')) return;
 
-  // API calls → Network-first (fallback to cache if offline)
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/facilities') || url.port === '8000') {
-    event.respondWith(networkFirst(request, RUNTIME_CACHE));
+  // ── Facility / Ticket API calls → Network-first with API_CACHE fallback ──
+  const isApiCall =
+    url.pathname.startsWith('/api/') ||
+    url.pathname.includes('/facilities') ||
+    url.pathname.includes('/tickets') ||
+    url.port === '8000';
+
+  if (isApiCall) {
+    event.respondWith(networkFirstWithApiCache(request));
     return;
   }
 
-  // Map tiles (Esri, CartoCSS, OSRM) → Cache-first with short TTL
-  if (
+  // ── Map tiles (satellite imagery, vector, OSRM routing) → Cache-first ──
+  const isMapResource =
     url.hostname.includes('arcgisonline.com') ||
     url.hostname.includes('cartocdn.com') ||
     url.hostname.includes('basemaps.cartocdn.com') ||
-    url.hostname.includes('project-osrm.org')
-  ) {
+    url.hostname.includes('project-osrm.org') ||
+    url.hostname.includes('openstreetmap.org') ||
+    url.pathname.endsWith('.pbf') ||
+    url.pathname.endsWith('.mvt');
+
+  if (isMapResource) {
     event.respondWith(cacheFirst(request, MAP_TILE_CACHE));
     return;
   }
 
-  // Next.js static assets (_next/static) → Cache-first (immutable)
+  // ── Next.js static assets → Cache-first (immutable hashed filenames) ──
   if (url.pathname.startsWith('/_next/static/')) {
     event.respondWith(cacheFirst(request, CACHE_NAME));
     return;
   }
 
-  // Pages → Stale-while-revalidate
+  // ── Page navigation → Stale-while-revalidate ──
   if (request.mode === 'navigate') {
     event.respondWith(staleWhileRevalidate(request, CACHE_NAME));
     return;
   }
 
-  // Everything else → Network with runtime cache fallback
+  // ── Everything else → Network with runtime fallback ──
   event.respondWith(networkFirst(request, RUNTIME_CACHE));
 });
 
-// ─── Strategies ──────────────────────────────────────────────
+// ─── Strategies ───────────────────────────────────────────────────────────────
 
-async function networkFirst(request, cacheName) {
+/**
+ * Network-first with dedicated API cache.
+ * On success: stores response in API_CACHE with a custom "sw-cached-at" header.
+ * On network failure: returns the stale cached response.
+ */
+async function networkFirstWithApiCache(request) {
+  const cache = await caches.open(API_CACHE);
   try {
-    const networkResponse = await fetch(request);
+    const networkResponse = await fetch(request.clone());
     if (networkResponse.ok) {
-      const cache = await caches.open(cacheName);
-      cache.put(request, networkResponse.clone());
+      // Clone and annotate with cache timestamp
+      const body = await networkResponse.clone().arrayBuffer();
+      const headers = new Headers(networkResponse.headers);
+      headers.set('sw-cached-at', new Date().toISOString());
+      const annotated = new Response(body, {
+        status: networkResponse.status,
+        statusText: networkResponse.statusText,
+        headers,
+      });
+      cache.put(request, annotated);
     }
     return networkResponse;
   } catch {
-    const cached = await caches.match(request);
-    return cached || new Response(JSON.stringify({ error: 'Offline' }), {
+    const cached = await cache.match(request);
+    if (cached) {
+      console.log('[SW] Serving stale API response for:', request.url);
+      return cached;
+    }
+    return new Response(JSON.stringify({ error: 'Offline — no cached data', offline: true }), {
       status: 503,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'sw-offline': 'true' },
     });
+  }
+}
+
+async function networkFirst(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  try {
+    const networkResponse = await fetch(request.clone());
+    if (networkResponse.ok) cache.put(request, networkResponse.clone());
+    return networkResponse;
+  } catch {
+    const cached = await cache.match(request);
+    return cached || new Response('Offline', { status: 503 });
   }
 }
 
@@ -107,7 +149,7 @@ async function cacheFirst(request, cacheName) {
   const cached = await caches.match(request);
   if (cached) return cached;
   try {
-    const networkResponse = await fetch(request);
+    const networkResponse = await fetch(request.clone());
     if (networkResponse.ok) {
       const cache = await caches.open(cacheName);
       cache.put(request, networkResponse.clone());
@@ -121,33 +163,27 @@ async function cacheFirst(request, cacheName) {
 async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
-  const fetchPromise = fetch(request).then((networkResponse) => {
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
-    }
+  const fetchPromise = fetch(request.clone()).then((networkResponse) => {
+    if (networkResponse.ok) cache.put(request, networkResponse.clone());
     return networkResponse;
   }).catch(() => cached);
   return cached || fetchPromise;
 }
 
-// Background sync: replay queued offline reports when online
+// ─── Background Sync (pending offline reports) ────────────────────────────────
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-offline-reports') {
-    event.waitUntil(syncOfflineReports());
+    event.waitUntil(
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) =>
+          client.postMessage({ type: 'SW_SYNC_TRIGGER', tag: 'sync-offline-reports' })
+        );
+      })
+    );
   }
 });
 
-async function syncOfflineReports() {
-  try {
-    const { openDB } = await import('/idb.mjs').catch(() => null) || {};
-    // Placeholder: actual sync is handled by SyncManager component
-    console.log('[SW] Background sync: offline-reports triggered');
-  } catch (err) {
-    console.warn('[SW] Sync error:', err);
-  }
-}
-
-// Push notifications (future)
+// ─── Push Notifications ───────────────────────────────────────────────────────
 self.addEventListener('push', (event) => {
   if (!event.data) return;
   const data = event.data.json();
@@ -179,4 +215,14 @@ self.addEventListener('notificationclick', (event) => {
       if (clients.openWindow) return clients.openWindow(url);
     })
   );
+});
+
+// ─── Message handler (from SyncManager) ──────────────────────────────────────
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  if (event.data?.type === 'CACHE_WARMUP_DONE') {
+    console.log('[SW] Cache warm-up confirmed by client. Facilities:', event.data.count);
+  }
 });

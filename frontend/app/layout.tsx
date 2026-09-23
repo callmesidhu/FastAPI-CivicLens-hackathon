@@ -3,6 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/lib/authContext';
 import LoginModal from '@/components/auth/LoginModal';
 import PWAInstallPrompt from '@/components/pwa/PWAInstallPrompt';
+import OfflineStatusBar from '@/components/pwa/OfflineStatusBar';
 
 export const metadata: Metadata = {
   title: 'CivicLens — See. Verify. Access.',
@@ -71,6 +72,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <AuthProvider>
+          <OfflineStatusBar />
           {children}
           <LoginModal />
           <PWAInstallPrompt />
