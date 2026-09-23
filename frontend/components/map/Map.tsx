@@ -16,13 +16,12 @@ interface CivicMapProps {
   onRequestLocation?: () => void;
   showHotspots?: boolean;
   radius?: number; // metres — drives auto-zoom + circle
+  is3D?: boolean;
 }
 
 export interface CivicMapHandle {
   findMe: () => void;
   isLocating: boolean;
-  toggle3D: () => void;
-  is3D: boolean;
 }
 
 // Fix for Turbopack worker issue
@@ -112,6 +111,7 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
   onRequestLocation,
   showHotspots = true,
   radius,
+  is3D = false,
 }, ref) {
   const mapRef = useRef<MapRef>(null);
   const [mapMode, setMapMode] = useState<'satellite' | 'street'>('satellite');
@@ -121,7 +121,9 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
   const [viewState, setViewState] = useState({
     longitude: userLocation?.lng || 76.3656, // Default around Jain University, Kakkanad, Kochi
     latitude: userLocation?.lat || 10.0070,
-    zoom: radius ? radiusToZoom(radius) : 14
+    zoom: radius ? radiusToZoom(radius) : 14,
+    pitch: is3D ? 65 : 0,
+    bearing: is3D ? -25 : 0,
   });
 
   // Auto-zoom when the radius filter changes
@@ -137,18 +139,41 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
     }
   }, [radius]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Handle 2D vs 3D camera pitch and bearing
+  useEffect(() => {
+    const targetPitch = is3D ? 65 : 0;
+    const targetBearing = is3D ? -25 : 0;
+
+    setViewState((prev) => ({
+      ...prev,
+      pitch: targetPitch,
+      bearing: targetBearing,
+    }));
+
+    if (mapRef.current) {
+      mapRef.current.easeTo({
+        pitch: targetPitch,
+        bearing: targetBearing,
+        duration: 800,
+        essential: true,
+      });
+    }
+  }, [is3D]);
+
   // Fly to user — called both on button click and when location resolves
   const flyToUser = useCallback((loc: { lat: number; lng: number }) => {
     if (mapRef.current) {
       mapRef.current.flyTo({
         center: [loc.lng, loc.lat],
         zoom: 16,
+        pitch: is3D ? 65 : 0,
+        bearing: is3D ? -25 : 0,
         duration: 1200,
         essential: true,
       });
     }
     setLocating(false);
-  }, []);
+  }, [is3D]);
 
   // "Find Me" button handler
   const handleFindMe = useCallback(() => {
@@ -160,29 +185,11 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
     }
   }, [userLocation, flyToUser, onRequestLocation]);
 
-  const [is3D, setIs3D] = useState(false);
-
-  const toggle3D = useCallback(() => {
-    setIs3D((prev) => {
-      const next = !prev;
-      if (mapRef.current) {
-        mapRef.current.easeTo({
-          pitch: next ? 60 : 0,
-          bearing: next ? -17.6 : 0,
-          duration: 1000,
-        });
-      }
-      return next;
-    });
-  }, []);
-
-  // Expose findMe(), toggle3D(), isLocating, and is3D to parent via ref
+  // Expose findMe() and isLocating to parent via ref
   useImperativeHandle(ref, () => ({
     findMe: handleFindMe,
     isLocating: locating,
-    toggle3D,
-    is3D,
-  }), [handleFindMe, locating, toggle3D, is3D]);
+  }), [handleFindMe, locating]);
 
   // When location resolves (after requesting), fly there
   useEffect(() => {
@@ -197,10 +204,12 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
       mapRef.current.flyTo({
         center: [selectedFacility.longitude, selectedFacility.latitude],
         zoom: 16,
+        pitch: is3D ? 65 : 0,
+        bearing: is3D ? -25 : 0,
         duration: 800
       });
     }
-  }, [selectedFacility]);
+  }, [selectedFacility, is3D]);
 
   // Marker condition dot
   const getConditionDot = (condition: string) => {
@@ -231,6 +240,9 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
         ref={mapRef}
         mapLib={maplibregl}
         {...viewState}
+        pitch={viewState.pitch}
+        bearing={viewState.bearing}
+        maxPitch={85}
         onMove={evt => setViewState(evt.viewState)}
         mapStyle={activeMapStyle}
         attributionControl={false}

@@ -78,7 +78,6 @@ export default function MapPage() {
   const [is3D, setIs3D] = useState(false);
 
   const handleToggle3D = useCallback(() => {
-    civicMapRef.current?.toggle3D();
     setIs3D((prev) => !prev);
   }, []);
 
@@ -98,6 +97,7 @@ export default function MapPage() {
           onRequestLocation={requestLocation}
           showHotspots={filters.hotspotsOnly}
           radius={filters.radius}
+          is3D={is3D}
         />
       </div>
 

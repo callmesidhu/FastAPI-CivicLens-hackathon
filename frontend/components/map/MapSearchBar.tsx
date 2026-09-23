@@ -94,15 +94,16 @@ export default function MapSearchBar({
           {/* 2D / 3D Mode Toggle Button — Pinned to the left of Find Me */}
           {onToggle3D && (
             <button
+              type="button"
               onClick={onToggle3D}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition shadow-sm shrink-0 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition shadow-sm shrink-0 cursor-pointer ${
                 is3D
-                  ? 'bg-[#3D1860] text-white shadow-md'
+                  ? 'bg-[#3D1860] text-white shadow-md ring-2 ring-[#BB99CD]'
                   : 'bg-white/95 backdrop-blur-sm text-[#3D1860] border border-[#BB99CD] hover:bg-[#F5EDF7]'
               }`}
               title="Toggle 2D / 3D Map View"
             >
-              <Box className="w-3.5 h-3.5 text-[#643579]" />
+              <Box className={`w-3.5 h-3.5 ${is3D ? 'text-white' : 'text-[#643579]'}`} />
               <span>{is3D ? '3D View' : '2D View'}</span>
             </button>
           )}
