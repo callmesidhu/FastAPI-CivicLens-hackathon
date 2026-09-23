@@ -398,7 +398,7 @@ export default function MapBottomSheet({
 
       {/* ── CLEAN POPUP MODAL DIALOG FOR ALL FILTER DROPDOWNS ── */}
       {openDropdown && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
           {/* Backdrop click dismiss */}
           <div
             className="fixed inset-0"
