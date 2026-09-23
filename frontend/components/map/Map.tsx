@@ -5,7 +5,7 @@ import * as maplibregl from 'maplibre-gl';
 import Map, { Marker, NavigationControl, GeolocateControl, MapRef, Source, Layer } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Facility } from '@/types';
-import { Droplet, MapPin, LocateFixed, AlertCircle, X, Flame, Users, Satellite, Map as MapIcon } from 'lucide-react';
+import { Droplet, MapPin, LocateFixed, AlertCircle, X, Flame, Users, Satellite, Map as MapIcon, Navigation } from 'lucide-react';
 
 interface CivicMapProps {
   facilities: Facility[];
@@ -318,6 +318,23 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
           </Marker>
         )}
       </Map>
+
+      {/* Floating "My Location" Floating Action Button */}
+      <div className="absolute bottom-24 right-4 z-20">
+        <button
+          onClick={handleFindMe}
+          disabled={locating}
+          className="flex items-center gap-2 bg-white/95 backdrop-blur-md text-[#3D1860] hover:bg-[#F5EDF7] border border-[#BB99CD]/50 shadow-xl px-4 py-2.5 rounded-full text-xs font-extrabold transition transform active:scale-95 cursor-pointer"
+          title="Recenter Map to My Location"
+        >
+          {locating ? (
+            <span className="w-4 h-4 border-2 border-[#3D1860] border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Navigation className="w-4 h-4 fill-[#643579] text-[#643579]" />
+          )}
+          <span>{locating ? 'Locating…' : 'My Location'}</span>
+        </button>
+      </div>
 
       {/* Top-Right Map Controls: Satellite/Street Switcher */}
       <div className="absolute top-4 right-4 z-20">

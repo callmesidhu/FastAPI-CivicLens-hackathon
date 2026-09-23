@@ -138,6 +138,7 @@ export default function MapPage() {
         onReportIssue={(facility) => setReportingFacility(facility)}
         filters={filters}
         onFilterChange={setFilters}
+        onFindMe={handleFindMe}
       />
 
       {/* Offline sync widget */}
