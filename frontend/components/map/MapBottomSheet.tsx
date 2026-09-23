@@ -285,7 +285,7 @@ export default function MapBottomSheet({
               : expanded ? 'h-[70vh]' : 'h-64'
           }
           md:top-0 md:bottom-0 md:left-0 md:right-auto md:w-[380px] lg:w-[400px] md:h-full md:rounded-none md:border-r md:border-t-0 md:border-gray-200
-          ${isSidebarCollapsed ? 'md:-translate-x-full' : 'md:translate-x-0'}
+          ${isSidebarCollapsed ? 'md:-translate-x-full md:pointer-events-none md:invisible md:shadow-none' : 'md:translate-x-0 md:visible'}
         `}
       >
         {/* Mobile Header with Drag Handle */}
