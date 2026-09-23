@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from 'react';
 import * as maplibregl from 'maplibre-gl';
-import Map, { Marker, NavigationControl, GeolocateControl, MapRef, Source, Layer } from 'react-map-gl/maplibre';
+import Map, { Marker, NavigationControl, MapRef, Source, Layer } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Facility } from '@/types';
 import { Droplet, MapPin, LocateFixed, AlertCircle, X, Flame, Users, Satellite, Map as MapIcon, Navigation } from 'lucide-react';
@@ -19,6 +19,7 @@ interface CivicMapProps {
   onSelectFacility: (facility: Facility | null) => void;
   selectedFacility: Facility | null;
   userLocation?: { lat: number; lng: number };
+  locationAccuracy?: number | null; // GPS accuracy in metres — drives the accuracy ring
   locationDenied?: boolean;
   onRequestLocation?: () => void;
   showHotspots?: boolean;
@@ -26,6 +27,7 @@ interface CivicMapProps {
   is3D?: boolean;
   activeRoute?: MapRoute | null;
   onClearRoute?: () => void;
+  mapMode?: 'satellite' | 'street';
 }
 
 export interface CivicMapHandle {
@@ -66,10 +68,10 @@ const STREET_STYLE = process.env.NEXT_PUBLIC_MAP_STYLE_URL || 'https://basemaps.
 
 /** Map radius → zoom level so the full circle fits the viewport */
 function radiusToZoom(metres: number): number {
-  if (metres <= 1000)  return 13;
-  if (metres <= 5000)  return 11;
-  if (metres <= 10000) return 10;
-  return 8; // 50 km
+  if (metres <= 1000)  return 17;
+  if (metres <= 5000)  return 16.2;
+  if (metres <= 10000) return 15.6;
+  return 14; // 50 km
 }
 
 /**
@@ -116,6 +118,7 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
   onSelectFacility,
   selectedFacility,
   userLocation,
+  locationAccuracy,
   locationDenied,
   onRequestLocation,
   showHotspots = true,
@@ -123,11 +126,14 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
   is3D = false,
   activeRoute = null,
   onClearRoute,
+  mapMode: propMapMode,
 }, ref) {
   const mapRef = useRef<MapRef>(null);
-  const [mapMode, setMapMode] = useState<'satellite' | 'street'>('satellite');
+  const [localMapMode, setLocalMapMode] = useState<'satellite' | 'street'>('satellite');
+  const mapMode = propMapMode ?? localMapMode;
   const [dismissAlert, setDismissAlert] = useState(false);
   const [locating, setLocating] = useState(false);
+  const hasCenteredInitialRef = useRef(false);
 
   // Auto-fit camera when navigation route is set
   useEffect(() => {
@@ -144,54 +150,33 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
           [minLng, minLat],
           [maxLng, maxLat],
         ],
-        { padding: { top: 130, bottom: 220, left: 60, right: 60 }, duration: 1000 }
+        { padding: { top: 140, bottom: 220, left: 60, right: 60 }, duration: 1000 }
       );
     }
   }, [activeRoute]);
 
-  const [viewState, setViewState] = useState({
-    longitude: userLocation?.lng || 76.3656, // Default around Jain University, Kakkanad, Kochi
-    latitude: userLocation?.lat || 10.0070,
-    zoom: radius ? radiusToZoom(radius) : 14,
-    pitch: is3D ? 65 : 0,
-    bearing: is3D ? -25 : 0,
-  });
-
   // Auto-zoom when the radius filter changes
   useEffect(() => {
-    if (radius == null) return;
+    if (radius == null || !mapRef.current) return;
     const zoom = radiusToZoom(radius);
     const lng = userLocation?.lng || 76.3656;
     const lat = userLocation?.lat || 10.0070;
-    if (mapRef.current) {
-      mapRef.current.flyTo({ center: [lng, lat], zoom, duration: 900, essential: true });
-    } else {
-      setViewState((prev) => ({ ...prev, longitude: lng, latitude: lat, zoom }));
-    }
+    mapRef.current.flyTo({ center: [lng, lat], zoom, duration: 900, essential: true });
   }, [radius]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Handle 2D vs 3D camera pitch and bearing
+  // Handle 2D vs 3D camera pitch and bearing smoothly with easeTo (no controlled state fighting)
   useEffect(() => {
-    const targetPitch = is3D ? 65 : 0;
-    const targetBearing = is3D ? -25 : 0;
-
-    setViewState((prev) => ({
-      ...prev,
-      pitch: targetPitch,
-      bearing: targetBearing,
-    }));
-
     if (mapRef.current) {
       mapRef.current.easeTo({
-        pitch: targetPitch,
-        bearing: targetBearing,
+        pitch: is3D ? 65 : 0,
+        bearing: is3D ? -25 : 0,
         duration: 800,
         essential: true,
       });
     }
   }, [is3D]);
 
-  // Fly to user — called both on button click and when location resolves
+  // Fly to user — called both on button click and when location first resolves
   const flyToUser = useCallback((loc: { lat: number; lng: number }) => {
     if (mapRef.current) {
       mapRef.current.flyTo({
@@ -222,12 +207,13 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
     isLocating: locating,
   }), [handleFindMe, locating]);
 
-  // When location resolves (after requesting), fly there
+  // Only auto-center on user ONCE when initial location is resolved, preventing map from jumping/flickering
   useEffect(() => {
-    if (userLocation) {
+    if (userLocation && !hasCenteredInitialRef.current) {
+      hasCenteredInitialRef.current = true;
       flyToUser(userLocation);
     }
-  }, [userLocation]);
+  }, [userLocation, flyToUser]);
 
   // Center map when selected facility changes from outside
   useEffect(() => {
@@ -237,10 +223,65 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
         zoom: 16,
         pitch: is3D ? 65 : 0,
         bearing: is3D ? -25 : 0,
-        duration: 800
+        duration: 800,
+        essential: true,
       });
     }
   }, [selectedFacility, is3D]);
+
+  // Auto-resize the MapLibre canvas whenever the container element changes size
+  // (e.g. bottom sheet opens/closes, sidebar expands). Without this the tile
+  // canvas stays the wrong dimensions and leaves a grey strip.
+  useEffect(() => {
+    const container = mapRef.current?.getContainer();
+    if (!container) return;
+
+    const observer = new ResizeObserver(() => {
+      mapRef.current?.resize();
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []); // run once after mount — the ref value is stable
+
+  // Memoized GeoJSON for Radius Circle (prevents layer rebuilding on every frame)
+  const radiusCircleGeoJSON = useMemo(() => {
+    if (!radius || !userLocation) return null;
+    return generateCircleGeoJSON(userLocation.lng, userLocation.lat, radius);
+  }, [radius, userLocation?.lat, userLocation?.lng]);
+
+  // Memoized GeoJSON for GPS Accuracy Ring (visualises device GPS precision)
+  const accuracyRingGeoJSON = useMemo(() => {
+    if (!locationAccuracy || locationAccuracy <= 0 || !userLocation) return null;
+    // Only show the ring when accuracy > 5 m (below that it's negligibly small)
+    if (locationAccuracy < 5) return null;
+    return generateCircleGeoJSON(userLocation.lng, userLocation.lat, locationAccuracy);
+  }, [locationAccuracy, userLocation?.lat, userLocation?.lng]);
+
+  // Memoized GeoJSON for Active Navigation Route (prevents route line flicker)
+  const activeRouteGeoJSON = useMemo(() => {
+    if (!activeRoute || activeRoute.coordinates.length < 2) return null;
+    return {
+      type: 'FeatureCollection' as const,
+      features: [
+        {
+          type: 'Feature' as const,
+          properties: {},
+          geometry: {
+            type: 'LineString' as const,
+            coordinates: activeRoute.coordinates,
+          },
+        },
+        {
+          type: 'Feature' as const,
+          properties: {},
+          geometry: {
+            type: 'MultiPoint' as const,
+            coordinates: activeRoute.coordinates,
+          },
+        },
+      ],
+    };
+  }, [activeRoute]);
 
   // Marker condition dot
   const getConditionDot = (condition: string) => {
@@ -270,17 +311,20 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
       <Map
         ref={mapRef}
         mapLib={maplibregl}
-        {...viewState}
-        pitch={viewState.pitch}
-        bearing={viewState.bearing}
+        reuseMaps
+        initialViewState={{
+          longitude: userLocation?.lng || 76.3656,
+          latitude: userLocation?.lat || 10.0070,
+          zoom: radius ? radiusToZoom(radius) : 14,
+          pitch: is3D ? 65 : 0,
+          bearing: is3D ? -25 : 0,
+        }}
         maxPitch={85}
-        onMove={evt => setViewState(evt.viewState)}
         mapStyle={activeMapStyle}
         attributionControl={false}
         style={{ width: '100%', height: '100%' }}
       >
         <NavigationControl position="bottom-right" />
-        <GeolocateControl position="bottom-right" />
 
         {/* Facility Markers */}
         {facilities.map((facility) => {
@@ -329,64 +373,59 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
           );
         })}
 
-        {/* Radius circle layer */}
-        {radius && (() => {
-          const lng = userLocation?.lng || 76.3656;
-          const lat = userLocation?.lat || 10.0070;
-          const circleData = generateCircleGeoJSON(lng, lat, radius);
-          return (
-            <Source id="radius-circle" type="geojson" data={circleData}>
-              {/* Translucent fill */}
-              <Layer
-                id="radius-fill"
-                type="fill"
-                paint={{
-                  'fill-color': '#643579',
-                  'fill-opacity': 0.07,
-                }}
-              />
-              {/* Dashed outline stroke */}
-              <Layer
-                id="radius-outline"
-                type="line"
-                paint={{
-                  'line-color': '#643579',
-                  'line-width': 2,
-                  'line-opacity': 0.6,
-                  'line-dasharray': [4, 3],
-                }}
-              />
-            </Source>
-          );
-        })()}
+        {/* GPS Accuracy Ring (soft blue halo scaled to real-world GPS accuracy) */}
+        {accuracyRingGeoJSON && (
+          <Source id="accuracy-ring" type="geojson" data={accuracyRingGeoJSON}>
+            <Layer
+              id="accuracy-ring-fill"
+              type="fill"
+              paint={{
+                'fill-color': '#3b82f6',
+                'fill-opacity': 0.08,
+              }}
+            />
+            <Layer
+              id="accuracy-ring-outline"
+              type="line"
+              paint={{
+                'line-color': '#3b82f6',
+                'line-width': 1.5,
+                'line-opacity': 0.35,
+                'line-dasharray': [3, 3],
+              }}
+            />
+          </Source>
+        )}
 
-        {/* Active In-App Navigation Route Layer */}
-        {activeRoute && activeRoute.coordinates.length > 1 && (
-          <Source
-            id="active-route"
-            type="geojson"
-            data={{
-              type: 'FeatureCollection',
-              features: [
-                {
-                  type: 'Feature',
-                  properties: {},
-                  geometry: {
-                    type: 'LineString',
-                    coordinates: activeRoute.coordinates,
-                  },
-                },
-                {
-                  type: 'Feature',
-                  properties: {},
-                  geometry: {
-                    type: 'MultiPoint',
-                    coordinates: activeRoute.coordinates,
-                  },
-                },
-              ],
-            }}
-          >
+        {/* Radius circle layer (memoized GeoJSON prevents GPU re-buffering flicker) */}
+        {radiusCircleGeoJSON && (
+          <Source id="radius-circle" type="geojson" data={radiusCircleGeoJSON}>
+            {/* Translucent fill */}
+            <Layer
+              id="radius-fill"
+              type="fill"
+              paint={{
+                'fill-color': '#643579',
+                'fill-opacity': 0.07,
+              }}
+            />
+            {/* Dashed outline stroke */}
+            <Layer
+              id="radius-outline"
+              type="line"
+              paint={{
+                'line-color': '#643579',
+                'line-width': 2,
+                'line-opacity': 0.6,
+                'line-dasharray': [4, 3],
+              }}
+            />
+          </Source>
+        )}
+
+        {/* Active In-App Navigation Route Layer (memoized GeoJSON prevents route line flicker) */}
+        {activeRouteGeoJSON && (
+          <Source id="active-route" type="geojson" data={activeRouteGeoJSON}>
             {/* Outer route casing / glow */}
             <Layer
               id="route-casing"
@@ -416,7 +455,7 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
                 'line-width': 6,
               }}
             />
-            {/* White waypoint dot markers along turn corners (like user screenshot) */}
+            {/* White waypoint dot markers along turn corners */}
             <Layer
               id="route-points"
               type="circle"
@@ -480,79 +519,9 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
         )}
       </Map>
 
-      {/* Floating Active Navigation Header Bar */}
-      {activeRoute && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 bg-[#3D1860] text-white px-4 py-2.5 rounded-full shadow-2xl border border-[#BB99CD]/50 animate-in slide-in-from-top-4 duration-200">
-          <Navigation className="w-4 h-4 fill-current text-[#BB99CD] animate-pulse shrink-0" />
-          <div className="text-xs font-bold truncate max-w-[180px] sm:max-w-xs">
-            {activeRoute.destinationName}
-          </div>
-          <span className="text-[11px] bg-white/20 px-2 py-0.5 rounded-full font-extrabold text-[#F5EDF7] shrink-0">
-            {activeRoute.durationSeconds > 60
-              ? `${Math.round(activeRoute.durationSeconds / 60)} min`
-              : '1 min'}
-          </span>
-          {onClearRoute && (
-            <button
-              onClick={onClearRoute}
-              className="p-1 hover:bg-white/20 rounded-full transition cursor-pointer text-white/80 hover:text-white shrink-0 ml-1"
-              title="End Navigation"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Floating "My Location" Floating Action Button */}
-      <div className="absolute bottom-24 right-4 z-20">
-        <button
-          onClick={handleFindMe}
-          disabled={locating}
-          className="flex items-center gap-2 bg-white/95 backdrop-blur-md text-[#3D1860] hover:bg-[#F5EDF7] border border-[#BB99CD]/50 shadow-xl px-4 py-2.5 rounded-full text-xs font-extrabold transition transform active:scale-95 cursor-pointer"
-          title="Recenter Map to My Location"
-        >
-          {locating ? (
-            <span className="w-4 h-4 border-2 border-[#3D1860] border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Navigation className="w-4 h-4 fill-[#643579] text-[#643579]" />
-          )}
-          <span>{locating ? 'Locating…' : 'My Location'}</span>
-        </button>
-      </div>
-
-      {/* Top-Right Map Controls: Satellite/Street Switcher */}
-      <div className="absolute top-4 right-4 z-20">
-        {/* View Toggle */}
-        <div className="bg-white/95 backdrop-blur-xs p-1 rounded-full shadow-xl border border-[#BB99CD]/40 flex items-center space-x-1">
-          <button
-            onClick={() => setMapMode('satellite')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
-              mapMode === 'satellite'
-                ? 'bg-[#3D1860] text-white shadow-xs'
-                : 'text-gray-700 hover:text-[#3D1860]'
-            }`}
-          >
-            <Satellite className="w-3.5 h-3.5" />
-            <span>Satellite</span>
-          </button>
-          <button
-            onClick={() => setMapMode('street')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
-              mapMode === 'street'
-                ? 'bg-[#3D1860] text-white shadow-xs'
-                : 'text-gray-700 hover:text-[#3D1860]'
-            }`}
-          >
-            <MapIcon className="w-3.5 h-3.5" />
-            <span>Street</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Top-Left Location Denied / Status Notification */}
+      {/* Bottom-Left Location Denied / Status Notification (avoids top search bar overlap) */}
       {locationDenied && !dismissAlert && (
-        <div className="absolute top-4 left-4 z-20 max-w-xs sm:max-w-sm bg-[#3D1860] border border-[#BB99CD]/40 text-white px-4 py-3 rounded-2xl shadow-xl flex items-start space-x-3">
+        <div className="absolute bottom-24 left-4 z-30 max-w-xs sm:max-w-sm bg-[#3D1860] border border-[#BB99CD]/40 text-white px-4 py-3 rounded-2xl shadow-xl flex items-start space-x-3">
           <AlertCircle className="w-5 h-5 text-white shrink-0 mt-0.5" />
           <div className="text-xs">
             <div className="font-extrabold text-sm mb-0.5">Location access was denied.</div>

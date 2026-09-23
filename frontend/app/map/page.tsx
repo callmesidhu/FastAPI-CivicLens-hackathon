@@ -47,6 +47,7 @@ export default function MapPage() {
 
   const activeLat = location.latitude ?? 10.0070408;
   const activeLng = location.longitude ?? 76.3656069;
+  const memoUserLocation = useMemo(() => ({ lat: activeLat, lng: activeLng }), [activeLat, activeLng]);
 
   const { data: rawFacilities, error, isLoading } = useSWR(
     ['facilities', filters.type, filters.status, filters.radius, activeLat, activeLng, filters.searchQuery],
@@ -55,7 +56,7 @@ export default function MapPage() {
       filters.status === 'all' ? undefined : filters.status,
       undefined, undefined, { latitude: activeLat, longitude: activeLng, permissionGranted: true, permissionDenied: false }, filters.radius, filters.searchQuery
     ),
-    { refreshInterval: 12000 }
+    { revalidateOnFocus: false, revalidateOnReconnect: false }
   );
 
   const allFacilities = useMemo(() => rawFacilities || [], [rawFacilities]);
@@ -77,6 +78,8 @@ export default function MapPage() {
   const toggleHotspots = () => setFilters((prev) => ({ ...prev, hotspotsOnly: !prev.hotspotsOnly }));
 
   const [is3D, setIs3D] = useState(false);
+  const [mapMode, setMapMode] = useState<'satellite' | 'street'>('satellite');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const handleToggle3D = useCallback(() => {
     setIs3D((prev) => !prev);
@@ -153,7 +156,8 @@ export default function MapPage() {
           facilities={displayedFacilities}
           selectedFacility={selectedFacility}
           onSelectFacility={setSelectedFacility}
-          userLocation={{ lat: activeLat, lng: activeLng }}
+          userLocation={memoUserLocation}
+          locationAccuracy={location.accuracy}
           locationDenied={location.permissionDenied}
           onRequestLocation={requestLocation}
           showHotspots={filters.hotspotsOnly}
@@ -161,6 +165,7 @@ export default function MapPage() {
           is3D={is3D}
           activeRoute={activeRoute}
           onClearRoute={() => setActiveRoute(null)}
+          mapMode={mapMode}
         />
       </div>
 
@@ -174,11 +179,17 @@ export default function MapPage() {
         locating={locating}
         onToggle3D={handleToggle3D}
         is3D={is3D}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
+        activeRoute={activeRoute}
+        onClearRoute={() => setActiveRoute(null)}
+        mapMode={mapMode}
+        onToggleMapMode={() => setMapMode((prev) => (prev === 'satellite' ? 'street' : 'satellite'))}
       />
 
       {/* ── Loading toast ── */}
       {isLoading && (
-        <div className="absolute top-36 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
+        <div className="absolute top-44 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
           <div className="bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-lg border border-gray-100 flex items-center gap-2.5">
             <div className="w-3.5 h-3.5 border-2 border-[#3D1860] border-t-transparent rounded-full animate-spin" />
             <span className="text-xs font-bold text-gray-700">Loading civic data…</span>
@@ -188,7 +199,7 @@ export default function MapPage() {
 
       {/* ── Error toast ── */}
       {error && (
-        <div className="absolute top-36 left-1/2 -translate-x-1/2 z-40 max-w-xs w-full px-4">
+        <div className="absolute top-44 left-1/2 -translate-x-1/2 z-40 max-w-xs w-full px-4">
           <div className="bg-white border border-red-100 shadow-xl rounded-2xl p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
             <div className="flex-1">
@@ -200,7 +211,7 @@ export default function MapPage() {
         </div>
       )}
 
-      {/* ── BOTTOM OVERLAY: Rapido-style bottom sheet ── */}
+      {/* ── BOTTOM/LEFT OVERLAY: Civic facilities panel (left sidebar on laptop, bottom sheet on mobile) ── */}
       <MapBottomSheet
         facilities={displayedFacilities}
         allFacilities={allFacilities}
@@ -211,6 +222,8 @@ export default function MapPage() {
         onFilterChange={setFilters}
         onFindMe={handleFindMe}
         onGetDirections={handleGetDirections}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
       />
 
       {/* Offline sync widget */}

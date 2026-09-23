@@ -6,7 +6,8 @@ import { DashboardFilterState } from '@/components/facilities/CivicDashboardCard
 import {
   ChevronUp, ChevronDown, Flag, Navigation, Flame, AlertTriangle,
   CheckCircle2, Lock, DropletOff, Info, Droplet, Users, MapPin,
-  ShieldCheck, X, Accessibility, Ruler, Check, RotateCcw, SlidersHorizontal, Filter
+  ShieldCheck, X, Accessibility, Ruler, Check, RotateCcw, SlidersHorizontal, Filter,
+  ChevronLeft, ChevronRight, Building2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -20,6 +21,8 @@ interface MapBottomSheetProps {
   onFilterChange: (f: DashboardFilterState) => void;
   onFindMe?: () => void;
   onGetDirections?: (f: Facility) => void;
+  isSidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 function conditionBadge(condition: string) {
@@ -201,6 +204,8 @@ export default function MapBottomSheet({
   onFilterChange,
   onFindMe,
   onGetDirections,
+  isSidebarCollapsed = false,
+  onToggleSidebar,
 }: MapBottomSheetProps) {
   const [expanded, setExpanded] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<'condition' | 'availability' | 'radius' | null>(null);
@@ -270,17 +275,23 @@ export default function MapBottomSheet({
 
   return (
     <>
-      <div
-        className={`absolute bottom-0 left-0 right-0 z-30 bg-white rounded-t-3xl shadow-2xl border-t border-gray-100 flex flex-col transition-all duration-300 ease-in-out ${
-          selectedFacility
-            ? expanded ? 'h-[75vh]' : 'h-[370px]'
-            : expanded ? 'h-[70vh]' : 'h-64'
-        }`}
+      {/* Main Panel Container: Bottom Sheet on Mobile, Left Sidebar on Laptop */}
+      <aside
+        className={`absolute z-30 bg-white shadow-2xl flex flex-col transition-all duration-300 ease-in-out overflow-hidden
+          bottom-0 left-0 right-0 rounded-t-3xl border-t border-gray-100
+          ${
+            selectedFacility
+              ? expanded ? 'h-[75vh]' : 'h-[370px]'
+              : expanded ? 'h-[70vh]' : 'h-64'
+          }
+          md:top-0 md:bottom-0 md:left-0 md:right-auto md:w-[380px] lg:w-[400px] md:h-full md:rounded-none md:border-r md:border-t-0 md:border-gray-200
+          ${isSidebarCollapsed ? 'md:-translate-x-full md:pointer-events-none md:invisible md:shadow-none' : 'md:translate-x-0 md:visible'}
+        `}
       >
-        {/* Drag handle + toggle */}
+        {/* Mobile Header with Drag Handle */}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex flex-col items-center pt-3 pb-2 shrink-0 w-full"
+          className="md:hidden flex flex-col items-center pt-3 pb-2 shrink-0 w-full cursor-pointer"
         >
           <div className="w-10 h-1 bg-gray-300 rounded-full mb-2" />
           <div className="flex items-center justify-between w-full px-4">
@@ -301,9 +312,44 @@ export default function MapBottomSheet({
           </div>
         </button>
 
+        {/* Laptop / Desktop Dedicated Header */}
+        <div className="hidden md:flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0 bg-white">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-[#3D1860] flex items-center justify-center text-white shadow-xs">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-black text-gray-900 tracking-tight">Civic Facilities</h2>
+                <span className="bg-[#F5EDF7] text-[#3D1860] border border-[#BB99CD]/40 text-[10px] font-black px-2 py-0.5 rounded-full">
+                  {facilities.length}
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-500 font-medium">Verified local sanitation &amp; water points</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {filters.hotspotsOnly && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                <Flame className="w-3 h-3" /> Hotspots
+              </span>
+            )}
+            {onToggleSidebar && (
+              <button
+                onClick={onToggleSidebar}
+                className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-[#F5EDF7] text-gray-400 hover:text-[#3D1860] flex items-center justify-center transition cursor-pointer ml-1"
+                title="Collapse sidebar"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* ── Filter Dropdowns Strip ── */}
-        <div className="px-4 pb-3 shrink-0 relative z-30">
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
+        <div className="px-4 py-2.5 shrink-0 relative z-30 border-b border-gray-100 bg-gray-50/70 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 flex-nowrap w-max pr-4">
             {/* ─ Condition Filter Pill ─ */}
             <button
               type="button"
@@ -413,7 +459,7 @@ export default function MapBottomSheet({
             ))
           )}
         </div>
-      </div>
+      </aside>
 
       {/* ── CLEAN POPUP MODAL DIALOG FOR ALL FILTER DROPDOWNS ── */}
       {openDropdown && (

@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/authContext';
-import AdminPortalModal from '@/components/admin/AdminPortalModal';
 import { Ticket, Flag, MapPin, User, Building2, LogOut, ChevronDown, ShieldCheck } from 'lucide-react';
 
 interface NavbarProps {
@@ -14,7 +13,6 @@ interface NavbarProps {
 export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps) {
   const { user, logout, openLoginModal, loginAs } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
 
   const isAdmin = user?.role === 'admin';
 
@@ -59,13 +57,13 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
 
             {/* Admin Portal Shortcut (visible when Admin is logged in) */}
             {isAdmin && (
-              <button
-                onClick={() => setIsAdminPortalOpen(true)}
+              <Link
+                href="/admin"
                 className="flex items-center space-x-1.5 bg-[#F5EDF7] hover:bg-[#BB99CD]/20 text-[#3D1860] border border-[#BB99CD]/50 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-full transition shadow-2xs"
               >
                 <Building2 className="w-3.5 h-3.5 text-[#643579]" />
                 <span>Admin Portal</span>
-              </button>
+              </Link>
             )}
 
             {/* User Profile / Dummy Login Trigger */}
@@ -100,29 +98,27 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
                     </div>
 
                     <div className="p-2 space-y-1">
+                      <Link
+                        href="/login"
+                        onClick={() => setShowUserMenu(false)}
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-[#3D1860] hover:bg-[#F5EDF7] flex items-center space-x-2 transition"
+                      >
+                        <Ticket className="w-3.5 h-3.5 text-[#643579]" />
+                        <span>My Tracked Tickets &amp; Account</span>
+                      </Link>
+
                       {isAdmin ? (
-                        <button
-                          onClick={() => {
-                            setIsAdminPortalOpen(true);
-                            setShowUserMenu(false);
-                          }}
+                        <Link
+                          href="/admin"
+                          onClick={() => setShowUserMenu(false)}
                           className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-[#3D1860] hover:bg-[#F5EDF7] flex items-center space-x-2"
                         >
                           <Building2 className="w-3.5 h-3.5 text-[#643579]" />
                           <span>Open Municipal Portal</span>
-                        </button>
+                        </Link>
                       ) : null}
 
-                      <button
-                        onClick={() => {
-                          loginAs(isAdmin ? 'citizen' : 'admin');
-                          setShowUserMenu(false);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5 text-[#643579]" />
-                        <span>Switch to {isAdmin ? 'Citizen Reporter' : 'Municipal Admin'}</span>
-                      </button>
+                     
 
                       <button
                         onClick={() => {
@@ -139,13 +135,15 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
                 )}
               </div>
             ) : (
-              <button
-                onClick={openLoginModal}
-                className="flex items-center space-x-1.5 text-xs sm:text-sm font-bold text-gray-700 hover:text-[#3D1860] bg-[#F5EDF7] hover:bg-[#BB99CD]/30 border border-[#BB99CD]/40 px-3.5 py-1.5 rounded-full transition shadow-2xs"
-              >
-                <User className="w-3.5 h-3.5 text-[#643579]" />
-                <span>Sign In / Role</span>
-              </button>
+              <div className="flex items-center space-x-1.5">
+                <Link
+                  href="/login"
+                  className="flex items-center space-x-1.5 text-xs sm:text-sm font-bold text-gray-700 hover:text-[#3D1860] bg-[#F5EDF7] hover:bg-[#BB99CD]/30 border border-[#BB99CD]/40 px-3.5 py-1.5 rounded-full transition shadow-2xs"
+                >
+                  <User className="w-3.5 h-3.5 text-[#643579]" />
+                  <span>Sign In / Role</span>
+                </Link>
+              </div>
             )}
 
 
@@ -153,11 +151,7 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
         </div>
       </nav>
 
-      {/* Admin Portal Slide-Over / Modal */}
-      <AdminPortalModal
-        isOpen={isAdminPortalOpen}
-        onClose={() => setIsAdminPortalOpen(false)}
-      />
+      {/* End Navbar */}
     </>
   );
 }

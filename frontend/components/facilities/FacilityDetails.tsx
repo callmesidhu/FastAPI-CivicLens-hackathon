@@ -23,7 +23,7 @@ export default function FacilityDetails({ facility, onClose }: FacilityDetailsPr
       getMetadata('lastFacilitySyncAt').then(val => {
         if (val) {
           try {
-            setLastSync(formatDistanceToNow(new Date(val)));
+            setLastSync(formatDistanceToNow(new Date(val as string)));
           } catch(e) {}
         }
       });

@@ -1,0 +1,251 @@
+ANAVANDI HACKATHON 2026
+PARTICIPANT RULEBOOK
+
+23–24 SEPTEMBER 2026 | KOCHI CAMPUS TO MUNNAR
+
+BUILD THROUGH THE NIGHT. CODE ON THE ROAD. PITCH IN MUNNAR.
+
+
+YOUR HACKATHON ROADMAP
+
+01 — 5:00 PM
+Problem disclosed on site
+
+02 — 6:00 PM
+Fresh build begins
+
+03 — 10:30 PM
+Round 1 review
+
+04 — 6:30 AM
+Round 2 review
+
+05 — AFTER ROUND 2
+Best 16 teams announced
+
+06 — 1:30 PM
+Code freeze and final pitch
+
+THE BEST 16 TEAMS ADVANCE
+
+Rounds 1 and 2 decide the shortlist. Only the best 16 eligible teams board ANAVANDI, attend Round 3 and deliver the final pitch in Munnar. Exposure-only teams do not board the bus.
+
+
+==================================================
+PARTICIPANT RULES
+==================================================
+
+Both members must understand and follow every rule.
+
+
+1. TEAM AND ALLOCATION
+
+Teams have exactly two registered members.
+
+No substitution or problem swapping is allowed after allocation.
+
+Teams must work independently and must not exchange code, credentials or private judge feedback.
+
+
+2. FRESH BUILD ONLY
+
+The Grand Finale solution must be created during the official coding window.
+
+The selection-round prototype, an earlier project, pre-built feature modules or copied solution logic cannot be reused.
+
+Standard frameworks and public libraries are allowed.
+
+
+3. REPOSITORY AND CODE FREEZE
+
+Create a new repository and share it with the Technical Coordinator at the official start.
+
+Commit regularly with meaningful messages.
+
+Create the final tag before 1:30 PM.
+
+Post-freeze code, data, configuration or deployment changes are not judged.
+
+
+4. AI USE
+
+AI-assisted and vibe coding are allowed, but teams must understand every component.
+
+Declare all AI tools in the README and final pitch.
+
+Judges may ask either member to explain, modify or debug the solution.
+
+
+5. PROHIBITED PLATFORMS
+
+Autonomous prompt-to-app and no-code builders, including Lovable, Replit Agent, Emergent and similar platforms, are not allowed.
+
+Inability to explain the submitted work may reduce the technical score or trigger an originality review.
+
+
+6. DATA AND PRIVACY
+
+Use only supplied, public, consented or realistic sample data.
+
+Do not expose personal identifiers, credentials, medical details, private locations or unverified allegations.
+
+Credit external data, APIs and open-source assets.
+
+
+7. COACH SAFETY
+
+Keep an offline copy of code and dependencies.
+
+Internet and bus power are not guaranteed.
+
+Screens must remain closed during the ghat section.
+
+Faculty marshal and bus safety instructions override technical work.
+
+
+==================================================
+FINAL SUBMISSION CHECKLIST
+==================================================
+
+Complete the final package before the 1:30 PM code freeze.
+
+
+1. WORKING PROTOTYPE
+
+Runs locally or through a stable deployment using permitted data.
+
+
+2. SOURCE REPOSITORY
+
+Complete source, dependencies, meaningful commits and final tagged release.
+
+
+3. README
+
+Problem, setup, architecture, completed features, limitations and tests.
+
+
+4. ARCHITECTURE DIAGRAM
+
+One-page system/data-flow view with storage, APIs and offline behaviour.
+
+
+5. DATA STATEMENT
+
+Sources, fields, transformations, limitations and privacy controls.
+
+
+6. AI-USE DECLARATION
+
+Tools used, purpose, generated components and verification performed.
+
+
+7. PRESENTATION
+
+Maximum five slides:
+
+- Problem
+- Users
+- Approach
+- Demo
+- Impact
+- Limitations
+
+
+8. LIVE DEMONSTRATION
+
+Core user journey plus one failure case or edge case.
+
+
+9. FEEDBACK RESPONSE
+
+Round 1–3 feedback, changes made and reasons for rejected suggestions.
+
+
+==================================================
+FINAL PITCH
+==================================================
+
+5 MIN + 1 MIN
+
+- Problem and users
+- Solution and architecture
+- Live working demo
+- Impact and limitations
+- AI use and feedback response
+
+
+==================================================
+FINAL SCORE — 100
+==================================================
+
+IDEA — 50
+
+- Problem — 15
+- Originality — 10
+- Impact — 10
+- Feasibility — 10
+- Pitch — 5
+
+
+TECHNICAL — 50
+
+- Prototype — 20
+- Data — 10
+- Architecture — 10
+- Feedback response — 10
+
+
+A SLIDE-ONLY CONCEPT IS NOT A WORKING PROTOTYPE.
+
+
+==================================================
+QUICK REFERENCE
+==================================================
+
+CODE. PROVE. ADVANCE.
+
+19.5-HOUR BUILD
+
+18:00 → 13:30
+
+23 SEP → 24 SEP | CODE FREEZE
+
+
+DO:
+
+✓ Build a fresh solution
+✓ Commit regularly
+✓ Keep an offline copy
+✓ Declare AI use
+✓ Explain every component
+✓ Follow marshal instructions
+
+
+DO NOT:
+
+✗ Reuse the selection prototype
+✗ Swap problems or members
+✗ Use autonomous/no-code builders
+✗ Share code with other teams
+✗ Modify after code freeze
+✗ Use screens on the ghat
+
+
+TOP 16 AFTER ROUND 2
+
+Only shortlisted teams board ANAVANDI, attend Round 3 and pitch in Munnar.
+
+
+OFFICIAL UPDATES
+
+Scan to join the closed ANAVANDI WhatsApp group.
+
+QUESTIONS?
+
+Contact the registration desk or faculty marshal.
+
+
+Mr. M. Sathish Kumar — Hackathon Coordinator
+
+Dr. Archana Menon — HoD
