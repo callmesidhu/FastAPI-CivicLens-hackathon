@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Facility } from '@/types';
 import { DashboardFilterState } from '@/components/facilities/CivicDashboardCard';
 import {
@@ -195,6 +195,19 @@ export default function MapBottomSheet({
 }: MapBottomSheetProps) {
   const [expanded, setExpanded] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<'condition' | 'availability' | 'radius' | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // When a facility is selected (even when scrolled down), expand sheet and scroll list to top
+  useEffect(() => {
+    if (selectedFacility) {
+      setExpanded(true);
+      listRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      const timer = setTimeout(() => {
+        listRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedFacility]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -356,14 +369,16 @@ export default function MapBottomSheet({
         </div>
 
         {/* Scrollable facility list (expanded area) */}
-        <div className="flex-1 overflow-y-auto min-h-0">
-          {/* Selected facility detail card */}
+        <div ref={listRef} className="flex-1 overflow-y-auto min-h-0 scroll-smooth">
+          {/* Selected facility detail card (sticky at top so it is always visible at the top) */}
           {selectedFacility && (
-            <SelectedFacilityCard
-              facility={selectedFacility}
-              onClose={() => onSelectFacility(null)}
-              onReportIssue={onReportIssue}
-            />
+            <div className="sticky top-0 z-20 bg-white shadow-xs border-b border-[#BB99CD]/40 animate-in slide-in-from-top-2 duration-200">
+              <SelectedFacilityCard
+                facility={selectedFacility}
+                onClose={() => onSelectFacility(null)}
+                onReportIssue={onReportIssue}
+              />
+            </div>
           )}
 
           {/* Facility rows */}
@@ -381,6 +396,7 @@ export default function MapBottomSheet({
                 onClick={() => {
                   onSelectFacility(facility);
                   setExpanded(true);
+                  listRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
               />
             ))
