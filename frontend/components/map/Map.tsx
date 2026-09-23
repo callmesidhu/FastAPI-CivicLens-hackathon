@@ -297,13 +297,13 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
           );
         })()}
 
-        {/* User Location Marker — Rendered on map canvas with zIndex 40 */}
+        {/* User Location Marker — Rendered on map canvas with zIndex 20 (below bottom sheet z-30) */}
         {userLocation && (
           <Marker
             longitude={userLocation.lng}
             latitude={userLocation.lat}
             anchor="center"
-            style={{ zIndex: 40 }}
+            style={{ zIndex: 20 }}
           >
             <div
               className="relative flex items-center justify-center cursor-pointer pointer-events-auto"

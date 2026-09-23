@@ -23,7 +23,7 @@ export default function MapSearchBar({
   locating = false,
 }: MapSearchBarProps) {
   return (
-    <div className="absolute top-0 left-0 right-0 z-30 px-3 pt-3 pb-2 pointer-events-none">
+    <div className="absolute top-0 left-0 right-0 z-40 px-3 pt-3 pb-2 pointer-events-none">
       <div className="pointer-events-auto flex flex-col gap-2">
         {/* Main pill bar */}
         <div className="flex items-center gap-2 bg-white/97 backdrop-blur-md rounded-2xl shadow-xl border border-gray-100 px-3 py-2.5">

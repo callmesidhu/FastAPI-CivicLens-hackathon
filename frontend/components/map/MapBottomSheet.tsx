@@ -240,7 +240,7 @@ export default function MapBottomSheet({
   return (
     <>
       <div
-        className={`absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-3xl shadow-2xl border-t border-gray-100 flex flex-col transition-all duration-300 ease-in-out ${
+        className={`absolute bottom-0 left-0 right-0 z-30 bg-white rounded-t-3xl shadow-2xl border-t border-gray-100 flex flex-col transition-all duration-300 ease-in-out ${
           expanded ? 'max-h-[70vh]' : 'max-h-64'
         }`}
         style={{ minHeight: '180px' }}
