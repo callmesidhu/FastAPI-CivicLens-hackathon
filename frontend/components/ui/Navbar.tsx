@@ -148,14 +148,7 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
               </button>
             )}
 
-            {/* Primary Action: Report Issue */}
-            <button
-              onClick={onOpenReport || onOpenTrackTicket}
-              className="flex items-center space-x-1.5 bg-[#3D1860] hover:bg-[#643579] text-[#F5EDF7] text-xs sm:text-sm font-bold px-4 py-2 rounded-full shadow-sm hover:shadow transition transform active:scale-95"
-            >
-              <Flag className="w-3.5 h-3.5" />
-              <span>Report Issue</span>
-            </button>
+
           </div>
         </div>
       </nav>

@@ -1,24 +1,31 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import useSWR from 'swr';
-import Link from 'next/link';
-import Navbar from '@/components/ui/Navbar';
-import CivicDashboardCard, { DashboardFilterState } from '@/components/facilities/CivicDashboardCard';
-import CivicMap from '@/components/map/Map';
-import PinInspectionPanel from '@/components/facilities/PinInspectionPanel';
+import CivicMap, { CivicMapHandle } from '@/components/map/Map';
+import MapSearchBar from '@/components/map/MapSearchBar';
+import MapBottomSheet from '@/components/map/MapBottomSheet';
 import ReportForm from '@/components/reports/ReportForm';
 import TicketSuccess from '@/components/reports/TicketSuccess';
 import TrackTicket from '@/components/reports/TrackTicket';
 import SyncManager from '@/components/sync/SyncManager';
-import Footer from '@/components/ui/Footer';
 import { fetchFacilities } from '@/lib/api';
 import { useLocation } from '@/hooks/useLocation';
 import { Facility } from '@/types';
-import { Flame, AlertCircle, ArrowLeft } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import { DashboardFilterState } from '@/components/facilities/CivicDashboardCard';
 
 export default function MapPage() {
   const { location, requestLocation } = useLocation();
+  const civicMapRef = useRef<CivicMapHandle>(null);
+  const [locating, setLocating] = useState(false);
+
+  const handleFindMe = useCallback(() => {
+    setLocating(true);
+    requestLocation();
+    civicMapRef.current?.findMe();
+    setTimeout(() => setLocating(false), 3000);
+  }, [requestLocation]);
 
   const [filters, setFilters] = useState<DashboardFilterState>({
     status: 'all',
@@ -27,6 +34,9 @@ export default function MapPage() {
     dateRange: 'all',
     searchQuery: '',
     hotspotsOnly: false,
+    condition: 'all',
+    availability: 'all',
+    wheelchair: false,
   });
 
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
@@ -34,167 +44,115 @@ export default function MapPage() {
   const [showTrackTicket, setShowTrackTicket] = useState(false);
   const [ticketSuccessData, setTicketSuccessData] = useState<{ ticket: any; facility: Facility } | null>(null);
 
-  // SWR Data Fetching
+  const activeLat = location.latitude ?? 10.0070408;
+  const activeLng = location.longitude ?? 76.3656069;
+
   const { data: rawFacilities, error, isLoading } = useSWR(
-    [
-      'facilities',
-      filters.type,
-      filters.status,
-      filters.radius,
-      location.latitude,
-      location.longitude,
-      filters.searchQuery,
-    ],
-    () =>
-      fetchFacilities(
-        filters.type === 'all' ? undefined : filters.type,
-        filters.status === 'all' ? undefined : filters.status,
-        undefined,
-        undefined,
-        location,
-        filters.radius,
-        filters.searchQuery
-      ),
+    ['facilities', filters.type, filters.status, filters.radius, activeLat, activeLng, filters.searchQuery],
+    () => fetchFacilities(
+      filters.type === 'all' ? undefined : (filters.type === 'water' ? 'drinking_water' : filters.type),
+      filters.status === 'all' ? undefined : filters.status,
+      undefined, undefined, { latitude: activeLat, longitude: activeLng, permissionGranted: true, permissionDenied: false }, filters.radius, filters.searchQuery
+    ),
     { refreshInterval: 12000 }
   );
 
   const allFacilities = useMemo(() => rawFacilities || [], [rawFacilities]);
 
-  // Client-side Hotspots Filtering
   const displayedFacilities = useMemo(() => {
     return allFacilities.filter((f) => {
-      if (filters.hotspotsOnly) {
-        return f.condition === 'broken' || (f.confidenceScore || 100) < 60;
+      if (filters.type && filters.type !== 'all') {
+        const targetType = filters.type === 'water' ? 'drinking_water' : filters.type;
+        if (f.type !== targetType) return false;
       }
+      if (filters.hotspotsOnly && !(f.condition === 'broken' || (f.confidenceScore || 100) < 60)) return false;
+      if (filters.condition !== 'all' && f.condition !== filters.condition) return false;
+      if (filters.availability !== 'all' && f.availability !== filters.availability) return false;
+      if (filters.wheelchair && !(f.accessibility?.wheelchairAccessible || (f as any).wheelchairAccessible)) return false;
       return true;
     });
-  }, [allFacilities, filters.hotspotsOnly]);
+  }, [allFacilities, filters.type, filters.hotspotsOnly, filters.condition, filters.availability, filters.wheelchair]);
 
-  const toggleHotspots = () => {
-    setFilters((prev) => ({ ...prev, hotspotsOnly: !prev.hotspotsOnly }));
-  };
+  const toggleHotspots = () => setFilters((prev) => ({ ...prev, hotspotsOnly: !prev.hotspotsOnly }));
 
-  const handleOpenReport = () => {
-    if (selectedFacility) {
-      setReportingFacility(selectedFacility);
-    } else if (allFacilities.length > 0) {
-      setSelectedFacility(allFacilities[0]);
-      setReportingFacility(allFacilities[0]);
-    }
-  };
+  const [is3D, setIs3D] = useState(false);
+
+  const handleToggle3D = useCallback(() => {
+    setIs3D((prev) => !prev);
+  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5EDF7]">
-      {/* Top Navbar */}
-      <Navbar
-        onOpenTrackTicket={() => setShowTrackTicket(true)}
-        onOpenReport={handleOpenReport}
-      />
+    /* Full viewport — no navbar, no footer. Pure map experience like Rapido */
+    <div className="fixed inset-0 overflow-hidden bg-gray-900">
 
-      {/* Breadcrumb / Back Link */}
-      <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
-        <Link
-          href="/"
-          className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-[#3D1860] transition"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Home Overview</span>
-        </Link>
+      {/* ── BASE LAYER: Full-screen map ── */}
+      <div className="absolute inset-0">
+        <CivicMap
+          ref={civicMapRef}
+          facilities={displayedFacilities}
+          selectedFacility={selectedFacility}
+          onSelectFacility={setSelectedFacility}
+          userLocation={{ lat: activeLat, lng: activeLng }}
+          locationDenied={location.permissionDenied}
+          onRequestLocation={requestLocation}
+          showHotspots={filters.hotspotsOnly}
+          radius={filters.radius}
+          is3D={is3D}
+        />
       </div>
 
-      {/* Main Map Portal */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {/* Civic Dashboard Card with KPI and Filters */}
-        <CivicDashboardCard
-          facilities={allFacilities}
-          filters={filters}
-          onFilterChange={setFilters}
-          onToggleHotspots={toggleHotspots}
-        />
+      {/* ── TOP OVERLAY: Rapido-style search/filter bar ── */}
+      <MapSearchBar
+        filters={filters}
+        onFilterChange={setFilters}
+        totalCount={allFacilities.length}
+        displayedCount={displayedFacilities.length}
+        onFindMe={handleFindMe}
+        locating={locating}
+        onToggle3D={handleToggle3D}
+        is3D={is3D}
+      />
 
-        {/* Map Header Status & Hotspots Toggle */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 px-1">
-          <div className="inline-flex items-center space-x-2 text-xs sm:text-sm font-bold text-gray-800">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>
-              Displaying {displayedFacilities.length} of {allFacilities.length} Verified Civic Amenities
-            </span>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={toggleHotspots}
-              className={`inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition border shadow-2xs ${
-                filters.hotspotsOnly
-                  ? 'bg-red-500 text-white border-red-500 shadow-xs'
-                  : 'bg-white text-red-600 border-red-200 hover:bg-red-50'
-              }`}
-            >
-              <Flame className={`w-3.5 h-3.5 ${filters.hotspotsOnly ? 'text-white' : 'text-red-500'}`} />
-              <span>Hotspots: {filters.hotspotsOnly ? 'ON' : 'OFF'}</span>
-            </button>
+      {/* ── Loading toast ── */}
+      {isLoading && (
+        <div className="absolute top-36 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
+          <div className="bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-lg border border-gray-100 flex items-center gap-2.5">
+            <div className="w-3.5 h-3.5 border-2 border-[#3D1860] border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-bold text-gray-700">Loading civic data…</span>
           </div>
         </div>
+      )}
 
-        {/* Split Grid: Map View & Pin Inspection Panel */}
-        <div className="flex flex-col lg:flex-row gap-6 items-stretch">
-          {/* Left: Map Container */}
-          <div className="flex-1 bg-white rounded-3xl border border-gray-200/80 shadow-xs p-2 h-[560px] md:h-[640px] relative overflow-hidden">
-            {isLoading && (
-              <div className="absolute inset-0 bg-white/60 backdrop-blur-xs z-30 flex items-center justify-center">
-                <div className="bg-white px-5 py-3 rounded-2xl shadow-lg border border-gray-100 flex items-center space-x-3">
-                  <div className="w-4 h-4 border-2 border-[#3D1860] border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-xs font-bold text-gray-700">Loading civic infrastructure...</span>
-                </div>
-              </div>
-            )}
-
-            {error && (
-              <div className="absolute inset-0 bg-white/70 backdrop-blur-xs z-30 flex items-center justify-center p-4">
-                <div className="bg-white border border-red-100 shadow-xl rounded-2xl p-5 max-w-sm text-center">
-                  <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
-                  <div className="text-sm font-bold text-gray-900 mb-1">Failed to connect to backend</div>
-                  <p className="text-xs text-gray-500 mb-3">Operating with cached offline civic data if available.</p>
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
-                  >
-                    Retry
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <CivicMap
-              facilities={displayedFacilities}
-              selectedFacility={selectedFacility}
-              onSelectFacility={setSelectedFacility}
-              userLocation={
-                location.permissionGranted && location.latitude && location.longitude
-                  ? { lat: location.latitude, lng: location.longitude }
-                  : undefined
-              }
-              locationDenied={location.permissionDenied}
-              onRequestLocation={requestLocation}
-              showHotspots={filters.hotspotsOnly}
-            />
-          </div>
-
-          {/* Right: Transparency Pin Inspection Panel */}
-          <div className="lg:w-96 shrink-0 flex">
-            <PinInspectionPanel
-              facility={selectedFacility}
-              onReportIssue={(facility) => setReportingFacility(facility)}
-              onClose={() => setSelectedFacility(null)}
-            />
+      {/* ── Error toast ── */}
+      {error && (
+        <div className="absolute top-36 left-1/2 -translate-x-1/2 z-40 max-w-xs w-full px-4">
+          <div className="bg-white border border-red-100 shadow-xl rounded-2xl p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-xs font-bold text-gray-900 mb-0.5">Backend unavailable</p>
+              <p className="text-[11px] text-gray-500 mb-2">Operating with cached offline data if available.</p>
+              <button onClick={() => window.location.reload()} className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">Retry</button>
+            </div>
           </div>
         </div>
-      </main>
+      )}
 
-      {/* Offline Sync Manager Widget */}
+      {/* ── BOTTOM OVERLAY: Rapido-style bottom sheet ── */}
+      <MapBottomSheet
+        facilities={displayedFacilities}
+        allFacilities={allFacilities}
+        selectedFacility={selectedFacility}
+        onSelectFacility={setSelectedFacility}
+        onReportIssue={(facility) => setReportingFacility(facility)}
+        filters={filters}
+        onFilterChange={setFilters}
+        onFindMe={handleFindMe}
+      />
+
+      {/* Offline sync widget */}
       <SyncManager />
 
-      {/* Issue Report Form Modal */}
+      {/* Modals */}
       {reportingFacility && (
         <ReportForm
           facility={reportingFacility}
@@ -206,26 +164,16 @@ export default function MapPage() {
         />
       )}
 
-      {/* Ticket Success Confirmation Modal */}
       {ticketSuccessData && (
         <TicketSuccess
           ticketData={ticketSuccessData.ticket}
           facility={ticketSuccessData.facility}
           onClose={() => setTicketSuccessData(null)}
-          onTrack={() => {
-            setTicketSuccessData(null);
-            setShowTrackTicket(true);
-          }}
+          onTrack={() => { setTicketSuccessData(null); setShowTrackTicket(true); }}
         />
       )}
 
-      {/* Track Ticket Modal */}
-      {showTrackTicket && (
-        <TrackTicket onClose={() => setShowTrackTicket(false)} />
-      )}
-
-      {/* Footer */}
-      <Footer />
+      {showTrackTicket && <TrackTicket onClose={() => setShowTrackTicket(false)} />}
     </div>
   );
 }

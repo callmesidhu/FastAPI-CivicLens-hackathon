@@ -11,6 +11,9 @@ export interface DashboardFilterState {
   dateRange: string;
   searchQuery: string;
   hotspotsOnly: boolean;
+  condition: string;
+  availability: string;
+  wheelchair: boolean;
 }
 
 interface CivicDashboardCardProps {
