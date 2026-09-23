@@ -163,17 +163,17 @@ function SelectedFacilityCard({ facility, onClose, onReportIssue }: {
       )}
 
       {/* Action Buttons row: Directions + Report Issue */}
-      <div className="flex gap-2 mb-2">
+      <div className="flex gap-2.5 pt-1 pb-3">
         <button
           onClick={openNavigation}
-          className="flex-1 flex items-center justify-center gap-1.5 bg-[#F5EDF7] hover:bg-[#BB99CD]/30 text-[#3D1860] border border-[#BB99CD]/40 font-semibold text-xs py-2.5 rounded-xl transition"
+          className="flex-1 flex items-center justify-center gap-1.5 bg-[#F5EDF7] hover:bg-[#BB99CD]/30 text-[#3D1860] border border-[#BB99CD]/40 font-bold text-xs py-2.5 rounded-xl transition cursor-pointer active:scale-98"
         >
-          <Navigation className="w-3.5 h-3.5" />
+          <Navigation className="w-3.5 h-3.5 fill-[#643579] text-[#643579]" />
           Directions
         </button>
         <button
           onClick={() => onReportIssue(facility)}
-          className="flex-1 flex items-center justify-center gap-1.5 bg-[#3D1860] hover:bg-[#643579] text-white font-bold text-xs py-2.5 rounded-xl shadow-xs transition"
+          className="flex-1 flex items-center justify-center gap-1.5 bg-[#3D1860] hover:bg-[#643579] text-white font-bold text-xs py-2.5 rounded-xl shadow-xs transition cursor-pointer active:scale-98"
         >
           <Flag className="w-3.5 h-3.5" />
           Report Issue
@@ -263,9 +263,10 @@ export default function MapBottomSheet({
     <>
       <div
         className={`absolute bottom-0 left-0 right-0 z-30 bg-white rounded-t-3xl shadow-2xl border-t border-gray-100 flex flex-col transition-all duration-300 ease-in-out ${
-          expanded ? 'max-h-[70vh]' : 'max-h-64'
+          selectedFacility
+            ? expanded ? 'h-[75vh]' : 'h-[370px]'
+            : expanded ? 'h-[70vh]' : 'h-64'
         }`}
-        style={{ minHeight: '180px' }}
       >
         {/* Drag handle + toggle */}
         <button
