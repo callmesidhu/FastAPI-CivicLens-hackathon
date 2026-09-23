@@ -4,6 +4,9 @@ import { useState, useMemo } from 'react';
 import useSWR from 'swr';
 import Navbar from '@/components/ui/Navbar';
 import HeroSection from '@/components/ui/HeroSection';
+import HowItWorks from '@/components/ui/HowItWorks';
+import WhyCivicLens from '@/components/ui/WhyCivicLens';
+import Footer from '@/components/ui/Footer';
 import CivicDashboardCard, { DashboardFilterState } from '@/components/facilities/CivicDashboardCard';
 import CivicMap from '@/components/map/Map';
 import PinInspectionPanel from '@/components/facilities/PinInspectionPanel';
@@ -105,6 +108,9 @@ export default function Home() {
         onViewMapClick={scrollToMap}
       />
 
+      {/* How It Works (4-Step Process) */}
+      <HowItWorks />
+
       {/* Main Civic Map & Transparency Area */}
       <main id="public-map" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Civic Dashboard Card with KPI and Filters */}
@@ -193,6 +199,12 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {/* Why CivicLens (Municipal Innovation 6-Feature Grid) */}
+      <WhyCivicLens />
+
+      {/* Footer */}
+      <Footer />
 
       {/* Offline Sync Manager Widget */}
       <SyncManager />

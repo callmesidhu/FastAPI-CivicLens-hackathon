@@ -10,7 +10,7 @@ interface HeroSectionProps {
 
 export default function HeroSection({ onReportClick, onViewMapClick }: HeroSectionProps) {
   return (
-    <section className="relative bg-[#2563eb] text-white pt-16 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden flex flex-col items-center justify-center text-center">
+    <section className="relative bg-[#2563eb] text-white pt-16 pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden flex flex-col items-center justify-center text-center rounded-b-[48px] md:rounded-b-[60px] shadow-xl">
       {/* Background Decorative Grid */}
       <div 
         className="absolute inset-0 opacity-10 pointer-events-none"
