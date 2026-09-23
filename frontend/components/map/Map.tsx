@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import * as maplibregl from 'maplibre-gl';
 import Map, { Marker, NavigationControl, GeolocateControl, MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Facility } from '@/types';
@@ -11,6 +12,11 @@ interface CivicMapProps {
   onSelectFacility: (facility: Facility | null) => void;
   selectedFacility: Facility | null;
   userLocation?: { lat: number; lng: number };
+}
+
+// Fix for Turbopack worker issue
+if (typeof window !== 'undefined') {
+  maplibregl.setWorkerUrl('/maplibre-gl-worker.mjs');
 }
 
 export default function CivicMap({ facilities, onSelectFacility, selectedFacility, userLocation }: CivicMapProps) {
@@ -87,6 +93,7 @@ export default function CivicMap({ facilities, onSelectFacility, selectedFacilit
     <div className="w-full h-full relative">
       <Map
         ref={mapRef}
+        mapLib={maplibregl}
         {...viewState}
         onMove={evt => setViewState(evt.viewState)}
         mapStyle={mapStyleUrl}
