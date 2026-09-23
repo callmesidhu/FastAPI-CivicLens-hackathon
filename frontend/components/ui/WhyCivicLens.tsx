@@ -1,9 +1,16 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Cpu, MapPin, Flame, Clock, Layers, CheckCircle2 } from 'lucide-react';
+import { useInView } from '@/hooks/useParallax';
 
 export default function WhyCivicLens() {
+  const headingRef = useRef<HTMLDivElement>(null);
+  const gridRef    = useRef<HTMLDivElement>(null);
+
+  const headingInView = useInView(headingRef, 0.2);
+  const gridInView    = useInView(gridRef, 0.08);
+
   const features = [
     {
       icon: <Cpu className="w-5 h-5 text-[#3D1860]" />,
@@ -61,44 +68,56 @@ export default function WhyCivicLens() {
     },
   ];
 
+  const delayClasses = [
+    'reveal-delay-1',
+    'reveal-delay-2',
+    'reveal-delay-3',
+    'reveal-delay-4',
+    'reveal-delay-5',
+    'reveal-delay-6',
+  ];
+
   return (
     <section className="w-full py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
-      {/* Badge */}
-      <div className="inline-flex items-center space-x-1.5 bg-[#F5EDF7] border border-[#BB99CD] text-[#3D1860] text-xs font-extrabold px-4 py-1 rounded-full mb-3 uppercase tracking-wider shadow-2xs">
-        <span>MUNICIPAL INNOVATION</span>
+
+      {/* Badge + Heading — scroll reveal */}
+      <div
+        ref={headingRef}
+        className={`reveal ${headingInView ? 'in-view' : ''}`}
+      >
+        <div className="inline-flex items-center space-x-1.5 bg-[#F5EDF7] border border-[#BB99CD] text-[#3D1860] text-xs font-extrabold px-4 py-1 rounded-full mb-3 uppercase tracking-wider shadow-2xs">
+          <span>MUNICIPAL INNOVATION</span>
+        </div>
+
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-3">
+          Why CivicLens
+        </h2>
+
+        <p className="max-w-2xl mx-auto text-sm sm:text-base text-gray-500 font-medium mb-12">
+          Built to keep our streets clear, amenities functioning, and ensure every report is resolved quickly.
+        </p>
       </div>
 
-      {/* Heading */}
-      <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-3">
-        Why CivicLens
-      </h2>
-
-      {/* Subtitle */}
-      <p className="max-w-2xl mx-auto text-sm sm:text-base text-gray-500 font-medium mb-12">
-        Built to keep our streets clear, amenities functioning, and ensure every report is resolved quickly.
-      </p>
-
-      {/* 6 Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+      {/* 6 Cards Grid — staggered slide-up */}
+      <div
+        ref={gridRef}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left"
+      >
         {features.map((item, idx) => (
           <div
             key={idx}
-            className="bg-white rounded-3xl border border-gray-200/80 shadow-xs hover:shadow-md p-6 flex flex-col justify-between transition-all group"
+            className={`reveal ${delayClasses[idx]} ${gridInView ? 'in-view' : ''} bg-white rounded-3xl border border-gray-200/80 shadow-xs hover:shadow-lg hover:-translate-y-1.5 p-6 flex flex-col justify-between transition-all duration-300 group`}
           >
             <div>
               {/* Icon Box */}
               <div
-                className={`w-11 h-11 rounded-2xl border flex items-center justify-center mb-5 ${item.iconBg}`}
+                className={`w-11 h-11 rounded-2xl border flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 ${item.iconBg}`}
               >
                 {item.icon}
               </div>
 
-              {/* Title */}
-              <h3 className="text-lg font-black text-gray-900 mb-2">
-                {item.title}
-              </h3>
+              <h3 className="text-lg font-black text-gray-900 mb-2">{item.title}</h3>
 
-              {/* Description */}
               <p className="text-xs sm:text-sm text-gray-500 font-normal leading-relaxed">
                 {item.description}
               </p>

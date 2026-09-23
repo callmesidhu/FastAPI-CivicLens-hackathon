@@ -1,9 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Camera, MapPin, Truck, CheckCircle2 } from 'lucide-react';
+import { useInView } from '@/hooks/useParallax';
 
 export default function HowItWorks() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
+  const gridRef    = useRef<HTMLDivElement>(null);
+
+  const headingInView = useInView(headingRef, 0.2);
+  const gridInView    = useInView(gridRef, 0.1);
+
   const steps = [
     {
       num: 1,
@@ -47,29 +55,38 @@ export default function HowItWorks() {
     },
   ];
 
+  const delayClass = ['reveal-delay-1', 'reveal-delay-2', 'reveal-delay-3', 'reveal-delay-4'];
+
   return (
-    <section className="w-full py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
-      {/* Badge */}
-      <div className="inline-flex items-center space-x-1.5 bg-[#F5EDF7] border border-[#BB99CD] text-[#3D1860] text-xs font-extrabold px-3.5 py-1 rounded-full mb-3 uppercase tracking-wider shadow-2xs">
-        <span>SIMPLE 4-STEP PROCESS</span>
+    <section ref={sectionRef} className="w-full py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+
+      {/* Badge + Heading — slide up when section enters view */}
+      <div
+        ref={headingRef}
+        className={`reveal ${headingInView ? 'in-view' : ''}`}
+      >
+        <div className="inline-flex items-center space-x-1.5 bg-[#F5EDF7] border border-[#BB99CD] text-[#3D1860] text-xs font-extrabold px-3.5 py-1 rounded-full mb-3 uppercase tracking-wider shadow-2xs">
+          <span>SIMPLE 4-STEP PROCESS</span>
+        </div>
+
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-3">
+          How CivicLens Works
+        </h2>
+
+        <p className="max-w-2xl mx-auto text-sm sm:text-base text-gray-500 font-medium mb-12">
+          From your quick photo report to confirmed clearance, here is how issues get resolved.
+        </p>
       </div>
 
-      {/* Heading */}
-      <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-3">
-        How CivicLens Works
-      </h2>
-
-      {/* Subtitle */}
-      <p className="max-w-2xl mx-auto text-sm sm:text-base text-gray-500 font-medium mb-12">
-        From your quick photo report to confirmed clearance, here is how issues get resolved.
-      </p>
-
-      {/* 4 Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
-        {steps.map((step) => (
+      {/* 4 Cards — staggered slide-up */}
+      <div
+        ref={gridRef}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left"
+      >
+        {steps.map((step, idx) => (
           <div
             key={step.num}
-            className="bg-white rounded-3xl border border-gray-200/80 shadow-xs hover:shadow-md p-6 flex flex-col justify-between transition-all group"
+            className={`reveal ${delayClass[idx]} ${gridInView ? 'in-view' : ''} bg-white rounded-3xl border border-gray-200/80 shadow-xs hover:shadow-lg hover:-translate-y-1 p-6 flex flex-col justify-between transition-all duration-300 group`}
           >
             <div>
               {/* Step Number Badge */}
@@ -79,12 +96,8 @@ export default function HowItWorks() {
                 {step.num}
               </div>
 
-              {/* Title */}
-              <h3 className="text-lg font-black text-gray-900 mb-2">
-                {step.title}
-              </h3>
+              <h3 className="text-lg font-black text-gray-900 mb-2">{step.title}</h3>
 
-              {/* Description */}
               <p className="text-xs sm:text-sm text-gray-500 font-normal leading-relaxed">
                 {step.description}
               </p>
