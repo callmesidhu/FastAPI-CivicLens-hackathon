@@ -441,15 +441,12 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
             style={{ zIndex: 25 }}
           >
             <div className="bg-white/98 backdrop-blur-md rounded-xl shadow-2xl border-2 border-gray-800/80 px-3 py-1.5 flex flex-col items-center animate-in zoom-in-95 pointer-events-auto select-none">
-              <div className="flex items-center gap-1.5 text-xs font-black text-gray-900">
-                <span className="text-sm">🚗</span>
-                <span>
-                  {activeRoute.durationSeconds > 60
-                    ? `${Math.round(activeRoute.durationSeconds / 60)} min`
-                    : '1 min'}
-                </span>
+              <div className="text-xs font-black text-gray-900 leading-tight">
+                {activeRoute.durationSeconds > 60
+                  ? `${Math.round(activeRoute.durationSeconds / 60)} min`
+                  : '1 min'}
               </div>
-              <div className="text-[11px] text-gray-600 font-bold">
+              <div className="text-[11px] text-gray-600 font-bold leading-tight">
                 {activeRoute.distanceMeters >= 1000
                   ? `${(activeRoute.distanceMeters / 1000).toFixed(1)} km`
                   : `${Math.round(activeRoute.distanceMeters)}m`}
