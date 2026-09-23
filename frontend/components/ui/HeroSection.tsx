@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Sparkles, MapPin, ArrowRight, ShieldCheck, Flame } from 'lucide-react';
 
 interface HeroSectionProps {
@@ -57,13 +58,13 @@ export default function HeroSection({ onReportClick, onViewMapClick }: HeroSecti
             <span>Sign In to Report Issue</span>
           </button>
 
-          <button
-            onClick={onViewMapClick}
+          <Link
+            href="/map"
             className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-blue-700/80 hover:bg-blue-800 border border-blue-300/40 text-white px-7 py-3.5 rounded-full font-bold text-sm sm:text-base shadow-lg hover:shadow-xl transition transform active:scale-95"
           >
             <MapPin className="w-4 h-4 text-yellow-300" />
             <span>View Public Map</span>
-          </button>
+          </Link>
         </div>
 
         {/* Highlight Banner Badges */}
