@@ -18,6 +18,9 @@ class FacilityBase(BaseModel):
     condition: str
     lastUpdated: str
     localBodyId: Optional[str] = None
+    status: str = "active"
+    submittedBy: Optional[str] = None
+    verifications: Optional[List[str]] = Field(default_factory=list)
 
 class FacilityCreate(FacilityBase):
     pass
@@ -33,6 +36,9 @@ class FacilityResponse(BaseModel):
     availability: str
     condition: str
     lastUpdated: str
+    status: str
+    submittedBy: Optional[str] = None
+    verifications: Optional[List[str]] = Field(default_factory=list)
     distanceMeters: Optional[float] = None
     confidenceScore: Optional[int] = None
     confidenceLevel: Optional[str] = None

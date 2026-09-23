@@ -296,4 +296,66 @@ export function getFullImageUrl(url?: string | null): string {
   return `${hostBase}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
+export async function createFacility(
+  facilityData: any,
+  userRole: string = 'citizen'
+) {
+  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/facilities?userRole=${userRole}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(facilityData)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to create facility');
+  }
+  return await res.json();
+}
+
+export async function verifyFacility(
+  facilityId: string,
+  userId: string,
+  userRole: string = 'citizen'
+) {
+  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/facilities/${facilityId}/verify?userId=${userId}&userRole=${userRole}`;
+  const res = await fetch(url, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to verify facility');
+  }
+  return await res.json();
+}
+
+export async function submitRating(
+  facilityId: string,
+  rating: number,
+  userId: string,
+  feedback?: string,
+  userEmail?: string
+) {
+  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/ratings`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ facilityId, rating, feedback, userId, userEmail })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to submit rating');
+  }
+  return await res.json();
+}
+
+export async function getRatings(facilityId: string) {
+  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/ratings/${facilityId}`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error('Failed to fetch ratings');
+  }
+  return await res.json();
+}
+
 

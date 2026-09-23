@@ -24,12 +24,12 @@ jobs:
     - name: Deploy to EC2
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-          # Assume we clone/pull the repo in a directory named 'civiclens'
-          if [ ! -d "civiclens" ]; then
-            git clone https://github.com/callmesidhu/FastAPI-CivicLens-hackathon.git civiclens
+          # Assume we clone/pull the repo in a directory named 'anavandi'
+          if [ ! -d "anavandi" ]; then
+            git clone https://github.com/callmesidhu/FastAPI-CivicLens-hackathon.git anavandi
           fi
           
-          cd civiclens
+          cd anavandi
           git fetch --all
           git checkout production
           git pull origin production

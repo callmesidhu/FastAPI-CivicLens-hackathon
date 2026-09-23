@@ -833,7 +833,7 @@ async def seed_database():
     await database.users.insert_many([
         {
             "email": "user@civiclens.com",
-            "password": "password123",
+            "password": "user123",
             "name": "Citizen Reporter",
             "role": "citizen",
             "title": "Active Citizen Reporter",

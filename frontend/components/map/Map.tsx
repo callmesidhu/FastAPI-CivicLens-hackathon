@@ -329,6 +329,7 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
         {/* Facility Markers */}
         {facilities.map((facility) => {
           const isSelected = selectedFacility?.id === facility.id;
+          const isPending = facility.status === 'pending';
           const hotspotActive = showHotspots && isHotspot(facility);
 
           return (
@@ -351,7 +352,8 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
                 {/* Marker Body — Theme Squircle Badge */}
                 <div 
                   className={`
-                    relative p-2 rounded-2xl bg-[#F5EDF7] border-2 border-[#BB99CD] transition-all shadow-md flex items-center justify-center
+                    relative p-2 rounded-2xl transition-all shadow-md flex items-center justify-center border-2
+                    ${isPending ? 'bg-purple-50 border-purple-300 border-dashed opacity-80' : 'bg-[#F5EDF7] border-[#BB99CD]'}
                     ${isSelected ? 'scale-125 ring-4 ring-[#643579]/40 z-50 shadow-2xl' : 'hover:scale-115'}
                   `}
                   title={facility.name}
@@ -360,14 +362,14 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
                   <span className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full ring-2 ring-white ${getConditionDot(facility.condition)}`} />
 
                   {facility.type === 'toilet' ? (
-                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-[#3D1860]" />
+                    <Users className={`w-4 h-4 sm:w-5 sm:h-5 ${isPending ? 'text-purple-400' : 'text-[#3D1860]'}`} />
                   ) : (
-                    <Droplet className="w-4 h-4 sm:w-5 sm:h-5 text-[#3D1860] fill-[#643579]/20" />
+                    <Droplet className={`w-4 h-4 sm:w-5 sm:h-5 ${isPending ? 'text-purple-400 fill-purple-200' : 'text-[#3D1860] fill-[#643579]/20'}`} />
                   )}
                 </div>
 
                 {/* Tiny Pin Pointer Stem */}
-                <div className="w-2 h-2 bg-[#BB99CD] rotate-45 -mt-1 rounded-2xs shadow-2xs" />
+                <div className={`w-2 h-2 rotate-45 -mt-1 rounded-2xs shadow-2xs ${isPending ? 'bg-purple-300' : 'bg-[#BB99CD]'}`} />
               </div>
             </Marker>
           );

@@ -19,6 +19,9 @@ export interface Facility {
   isUserReported?: boolean;
   imageUrl?: string;
   verifiedByMunicipal?: boolean;
+  status?: 'active' | 'pending' | 'rejected';
+  submittedBy?: string;
+  verifications?: string[];
 }
 
 export interface FacilityListResponse {
