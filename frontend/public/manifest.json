@@ -1,0 +1,50 @@
+{
+  "name": "CivicLens — See. Verify. Access.",
+  "short_name": "CivicLens",
+  "description": "Find nearby public toilets and drinking-water points. Neighbourhood Intelligence & Response Assistant.",
+  "start_url": "/map",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#3D1860",
+  "theme_color": "#3D1860",
+  "lang": "en",
+  "categories": ["utilities", "navigation", "productivity"],
+  "icons": [
+    {
+      "src": "/pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Open Map",
+      "short_name": "Map",
+      "description": "Jump straight to the live civic facilities map",
+      "url": "/map",
+      "icons": [{ "src": "/pwa-icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Report an Issue",
+      "short_name": "Report",
+      "description": "Quickly report a broken or unavailable facility",
+      "url": "/map",
+      "icons": [{ "src": "/pwa-icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}
