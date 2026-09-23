@@ -1,147 +1,231 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import useSWR from 'swr';
+import Navbar from '@/components/ui/Navbar';
+import HeroSection from '@/components/ui/HeroSection';
+import CivicDashboardCard, { DashboardFilterState } from '@/components/facilities/CivicDashboardCard';
 import CivicMap from '@/components/map/Map';
-import FiltersPanel, { FilterState } from '@/components/filters/FiltersPanel';
-import FacilityDetails from '@/components/facilities/FacilityDetails';
-import FacilityList from '@/components/facilities/FacilityList';
+import PinInspectionPanel from '@/components/facilities/PinInspectionPanel';
+import ReportForm from '@/components/reports/ReportForm';
+import TicketSuccess from '@/components/reports/TicketSuccess';
 import TrackTicket from '@/components/reports/TrackTicket';
+import SyncManager from '@/components/sync/SyncManager';
 import { fetchFacilities } from '@/lib/api';
 import { useLocation } from '@/hooks/useLocation';
 import { Facility } from '@/types';
-import { AlertCircle, MapPin, Ticket } from 'lucide-react';
+import { Flame, AlertCircle } from 'lucide-react';
 
 export default function Home() {
-  const { location, requestLocation, isRequesting } = useLocation();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showTrackTicket, setShowTrackTicket] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({
-    type: 'all',
-    condition: 'all',
-    availability: 'all',
-    wheelchairAccessible: false,
-    radius: 1000,
-  });
-  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
+  const { location, requestLocation } = useLocation();
 
-  // Use SWR for data fetching
-  const { data: facilities, error, isLoading } = useSWR(
-    ['facilities', filters.type, filters.condition, filters.availability, filters.wheelchairAccessible, filters.radius, location.latitude, location.longitude, searchQuery],
-    () => fetchFacilities(filters.type, filters.condition, filters.wheelchairAccessible, filters.availability, location, filters.radius, searchQuery),
-    { refreshInterval: 10000 } // Auto-refresh to pick up new reports
+  const [filters, setFilters] = useState<DashboardFilterState>({
+    status: 'all',
+    type: 'all',
+    radius: 50000,
+    dateRange: 'all',
+    searchQuery: '',
+    hotspotsOnly: false,
+  });
+
+  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
+  const [reportingFacility, setReportingFacility] = useState<Facility | null>(null);
+  const [showTrackTicket, setShowTrackTicket] = useState(false);
+  const [ticketSuccessData, setTicketSuccessData] = useState<{ ticket: any; facility: Facility } | null>(null);
+
+  // SWR Data Fetching
+  const { data: rawFacilities, error, isLoading } = useSWR(
+    [
+      'facilities',
+      filters.type,
+      filters.status,
+      filters.radius,
+      location.latitude,
+      location.longitude,
+      filters.searchQuery,
+    ],
+    () =>
+      fetchFacilities(
+        filters.type === 'all' ? undefined : filters.type,
+        filters.status === 'all' ? undefined : filters.status,
+        undefined,
+        undefined,
+        location,
+        filters.radius,
+        filters.searchQuery
+      ),
+    { refreshInterval: 12000 }
   );
 
+  const allFacilities = useMemo(() => rawFacilities || [], [rawFacilities]);
+
+  // Client-side Hotspots Filtering
+  const displayedFacilities = useMemo(() => {
+    return allFacilities.filter((f) => {
+      if (filters.hotspotsOnly) {
+        return f.condition === 'broken' || (f.confidenceScore || 100) < 60;
+      }
+      return true;
+    });
+  }, [allFacilities, filters.hotspotsOnly]);
+
+  const toggleHotspots = () => {
+    setFilters((prev) => ({ ...prev, hotspotsOnly: !prev.hotspotsOnly }));
+  };
+
+  const scrollToMap = () => {
+    const el = document.getElementById('public-map');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleOpenHeroReport = () => {
+    if (selectedFacility) {
+      setReportingFacility(selectedFacility);
+    } else if (allFacilities.length > 0) {
+      setSelectedFacility(allFacilities[0]);
+      setReportingFacility(allFacilities[0]);
+    } else {
+      scrollToMap();
+    }
+  };
+
   return (
-    <main className="flex h-screen w-full flex-col bg-gray-50 overflow-hidden">
-      {/* Header */}
-      <header className="bg-white shadow-sm z-20 p-4 shrink-0 flex items-center justify-between border-b relative">
-        <div className="flex items-center space-x-4">
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-blue-600">CIVICLENS</h1>
-            <p className="text-sm text-gray-500 font-medium hidden sm:block">See. Verify. Access.</p>
-          </div>
-          <button 
-            onClick={() => setShowTrackTicket(true)}
-            className="hidden sm:flex items-center text-sm font-semibold text-gray-600 hover:text-blue-600 ml-4 transition-colors"
-          >
-            <Ticket className="w-4 h-4 mr-1.5" />
-            Track Ticket
-          </button>
-        </div>
-        <div className="flex items-center space-x-4">
-          <button 
-            onClick={() => setShowTrackTicket(true)}
-            className="sm:hidden flex items-center justify-center p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-            aria-label="Track Ticket"
-          >
-            <Ticket className="w-5 h-5" />
-          </button>
-          {!location.permissionGranted && !location.permissionDenied && (
-            <button 
-              onClick={requestLocation}
-              disabled={isRequesting}
-              className="flex items-center px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-full text-sm font-semibold transition disabled:opacity-50"
-            >
-              <MapPin className="w-4 h-4 mr-2" />
-              {isRequesting ? 'Locating...' : 'Find facilities near me'}
-            </button>
-          )}
-          {location.permissionDenied && (
-            <span className="text-sm text-orange-600 font-medium flex items-center bg-orange-50 px-3 py-1.5 rounded-full">
-              <AlertCircle className="w-4 h-4 mr-1.5" />
-              Location access denied
+    <div className="min-h-screen flex flex-col bg-[#f0f4f9]">
+      {/* Top Sticky Navbar */}
+      <Navbar
+        onOpenTrackTicket={() => setShowTrackTicket(true)}
+        onOpenReport={handleOpenHeroReport}
+      />
+
+      {/* Hero Section */}
+      <HeroSection
+        onReportClick={handleOpenHeroReport}
+        onViewMapClick={scrollToMap}
+      />
+
+      {/* Main Civic Map & Transparency Area */}
+      <main id="public-map" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Civic Dashboard Card with KPI and Filters */}
+        <CivicDashboardCard
+          facilities={allFacilities}
+          filters={filters}
+          onFilterChange={setFilters}
+          onToggleHotspots={toggleHotspots}
+        />
+
+        {/* Map Header Status & Hotspots Toggle */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 px-1">
+          <div className="inline-flex items-center space-x-2 text-xs sm:text-sm font-bold text-gray-800">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>
+              Displaying {displayedFacilities.length} of {allFacilities.length} Verified Civic Amenities
             </span>
-          )}
-        </div>
-      </header>
+          </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 relative w-full h-full flex flex-col md:flex-row">
-        
-        {/* Left Side: Facility List (Desktop) or Bottom Sheet (Mobile) */}
-        <div className="h-1/3 md:h-full md:w-96 shrink-0 order-2 md:order-1 z-20">
-          <FacilityList 
-            facilities={facilities || []} 
-            selectedFacility={selectedFacility}
-            onSelectFacility={setSelectedFacility}
-          />
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={toggleHotspots}
+              className={`inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition border shadow-2xs ${
+                filters.hotspotsOnly
+                  ? 'bg-red-500 text-white border-red-500 shadow-xs'
+                  : 'bg-white text-red-600 border-red-200 hover:bg-red-50'
+              }`}
+            >
+              <Flame className={`w-3.5 h-3.5 ${filters.hotspotsOnly ? 'text-white' : 'text-red-500'}`} />
+              <span>Hotspots: {filters.hotspotsOnly ? 'ON' : 'OFF'}</span>
+            </button>
+          </div>
         </div>
 
-        {/* Right Side: Map */}
-        <div className="flex-1 relative h-2/3 md:h-full order-1 md:order-2">
-          {isLoading && (
-            <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-20 flex items-center justify-center">
-              <div className="bg-white p-4 rounded-xl shadow-lg flex items-center space-x-3">
-                <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                <p className="font-medium text-gray-700">Loading facilities...</p>
+        {/* Split Grid: Map View & Pin Inspection Panel */}
+        <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+          {/* Left: Map Container */}
+          <div className="flex-1 bg-white rounded-3xl border border-gray-200/80 shadow-xs p-2 h-[560px] md:h-[620px] relative overflow-hidden">
+            {isLoading && (
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-xs z-30 flex items-center justify-center">
+                <div className="bg-white px-5 py-3 rounded-2xl shadow-lg border border-gray-100 flex items-center space-x-3">
+                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-xs font-bold text-gray-700">Loading civic infrastructure...</span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {error && (
-            <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-20 flex items-center justify-center">
-              <div className="bg-red-50 text-red-700 p-6 rounded-xl shadow-lg max-w-sm text-center">
-                <AlertCircle className="w-10 h-10 mx-auto mb-3 text-red-500" />
-                <h3 className="font-bold mb-1">Unable to load facilities</h3>
-                <p className="text-sm mb-4">There was a problem connecting to the server.</p>
-                <button 
-                  onClick={() => window.location.reload()}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition"
-                >
-                  Retry
-                </button>
+            {error && (
+              <div className="absolute inset-0 bg-white/70 backdrop-blur-xs z-30 flex items-center justify-center p-4">
+                <div className="bg-white border border-red-100 shadow-xl rounded-2xl p-5 max-w-sm text-center">
+                  <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                  <div className="text-sm font-bold text-gray-900 mb-1">Failed to connect to backend</div>
+                  <p className="text-xs text-gray-500 mb-3">Operating with cached offline civic data if available.</p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
+                  >
+                    Retry
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Map */}
-          <CivicMap 
-            facilities={facilities || []} 
-            selectedFacility={selectedFacility}
-            onSelectFacility={setSelectedFacility}
-            userLocation={location.permissionGranted ? {lat: location.latitude!, lng: location.longitude!} : undefined}
-          />
+            <CivicMap
+              facilities={displayedFacilities}
+              selectedFacility={selectedFacility}
+              onSelectFacility={setSelectedFacility}
+              userLocation={
+                location.permissionGranted && location.latitude && location.longitude
+                  ? { lat: location.latitude, lng: location.longitude }
+                  : undefined
+              }
+              locationDenied={location.permissionDenied}
+              onRequestLocation={requestLocation}
+              showHotspots={filters.hotspotsOnly}
+            />
+          </div>
 
-          {/* Floating Components over Map */}
-          <FiltersPanel 
-            filters={filters} 
-            onFilterChange={setFilters} 
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
-          
-          {/* Detail Panel overlay */}
-          <FacilityDetails 
-            facility={selectedFacility} 
-            onClose={() => setSelectedFacility(null)} 
-          />
+          {/* Right: Transparency Pin Inspection Panel */}
+          <div className="lg:w-96 shrink-0 flex">
+            <PinInspectionPanel
+              facility={selectedFacility}
+              onReportIssue={(facility) => setReportingFacility(facility)}
+              onClose={() => setSelectedFacility(null)}
+            />
+          </div>
         </div>
-      </div>
+      </main>
 
+      {/* Offline Sync Manager Widget */}
+      <SyncManager />
+
+      {/* Issue Report Form Modal */}
+      {reportingFacility && (
+        <ReportForm
+          facility={reportingFacility}
+          onClose={() => setReportingFacility(null)}
+          onSuccess={(ticketData) => {
+            setTicketSuccessData({ ticket: ticketData, facility: reportingFacility });
+            setReportingFacility(null);
+          }}
+        />
+      )}
+
+      {/* Ticket Success Confirmation Modal */}
+      {ticketSuccessData && (
+        <TicketSuccess
+          ticketData={ticketSuccessData.ticket}
+          facility={ticketSuccessData.facility}
+          onClose={() => setTicketSuccessData(null)}
+          onTrack={() => {
+            setTicketSuccessData(null);
+            setShowTrackTicket(true);
+          }}
+        />
+      )}
+
+      {/* Track Ticket Modal */}
       {showTrackTicket && (
         <TrackTicket onClose={() => setShowTrackTicket(false)} />
       )}
-    </main>
+    </div>
   );
 }

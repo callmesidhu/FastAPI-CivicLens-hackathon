@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+.bg-civic-grid {
+  background-color: #f0f4f9;
+  background-image: 
+    linear-gradient(to right, rgba(203, 213, 225, 0.5) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(203, 213, 225, 0.5) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.hero-3d-title {
+  color: #fbbf24;
+  text-shadow: 
+    2px 2px 0px #111827,
+    4px 4px 0px #111827,
+    6px 6px 0px rgba(0, 0, 0, 0.85);
+}

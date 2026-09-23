@@ -17,6 +17,8 @@ export interface Facility {
   confidenceScore?: number;
   confidenceLevel?: string;
   isUserReported?: boolean;
+  imageUrl?: string;
+  verifiedByMunicipal?: boolean;
 }
 
 export interface FacilityListResponse {

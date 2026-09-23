@@ -5,13 +5,16 @@ import * as maplibregl from 'maplibre-gl';
 import Map, { Marker, NavigationControl, GeolocateControl, MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Facility } from '@/types';
-import { Droplet, MapPin, LocateFixed } from 'lucide-react';
+import { Droplet, MapPin, LocateFixed, Navigation, AlertTriangle, AlertCircle, X, Flame } from 'lucide-react';
 
 interface CivicMapProps {
   facilities: Facility[];
   onSelectFacility: (facility: Facility | null) => void;
   selectedFacility: Facility | null;
   userLocation?: { lat: number; lng: number };
+  locationDenied?: boolean;
+  onRequestLocation?: () => void;
+  showHotspots?: boolean;
 }
 
 // Fix for Turbopack worker issue
@@ -19,20 +22,60 @@ if (typeof window !== 'undefined') {
   maplibregl.setWorkerUrl('/maplibre-gl-worker.mjs');
 }
 
-export default function CivicMap({ facilities, onSelectFacility, selectedFacility, userLocation }: CivicMapProps) {
+// High-resolution Esri World Imagery raster style definition
+const SATELLITE_STYLE: any = {
+  version: 8,
+  sources: {
+    'esri-satellite': {
+      type: 'raster',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+      ],
+      tileSize: 256,
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+    }
+  },
+  layers: [
+    {
+      id: 'esri-satellite-layer',
+      type: 'raster',
+      source: 'esri-satellite',
+      minzoom: 0,
+      maxzoom: 19
+    }
+  ]
+};
+
+const STREET_STYLE = process.env.NEXT_PUBLIC_MAP_STYLE_URL || 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
+
+export default function CivicMap({
+  facilities,
+  onSelectFacility,
+  selectedFacility,
+  userLocation,
+  locationDenied,
+  onRequestLocation,
+  showHotspots = true,
+}: CivicMapProps) {
   const mapRef = useRef<MapRef>(null);
+  const [mapMode, setMapMode] = useState<'satellite' | 'street'>('satellite');
+  const [dismissAlert, setDismissAlert] = useState(false);
+
   const [viewState, setViewState] = useState({
-    longitude: userLocation?.lng || 76.9366,
-    latitude: userLocation?.lat || 8.5241,
-    zoom: 12
+    longitude: userLocation?.lng || 76.2673, // Default around Kochi / Kerala
+    latitude: userLocation?.lat || 9.9312,
+    zoom: 13
   });
 
   // Recentering logic
   const handleRecenter = () => {
+    if (onRequestLocation && !userLocation) {
+      onRequestLocation();
+    }
     if (userLocation && mapRef.current) {
       mapRef.current.flyTo({
         center: [userLocation.lng, userLocation.lat],
-        zoom: 14,
+        zoom: 15,
         duration: 1000
       });
     }
@@ -44,17 +87,28 @@ export default function CivicMap({ facilities, onSelectFacility, selectedFacilit
     }
   }, [userLocation]);
 
-  // Calculate icon colors based on condition
+  // Center map when selected facility changes from outside
+  useEffect(() => {
+    if (selectedFacility && mapRef.current) {
+      mapRef.current.flyTo({
+        center: [selectedFacility.longitude, selectedFacility.latitude],
+        zoom: 16,
+        duration: 800
+      });
+    }
+  }, [selectedFacility]);
+
+  // Marker colors
   const getMarkerColor = (condition: string) => {
     switch (condition) {
       case 'clean':
       case 'usable':
-        return 'text-green-600';
+        return 'text-emerald-600';
       case 'broken':
         return 'text-red-600';
       case 'locked':
       case 'no_water':
-        return 'text-orange-500';
+        return 'text-amber-500';
       default:
         return 'text-gray-500';
     }
@@ -64,44 +118,37 @@ export default function CivicMap({ facilities, onSelectFacility, selectedFacilit
     switch (condition) {
       case 'clean':
       case 'usable':
-        return 'bg-green-100 border-green-300';
+        return 'bg-emerald-50 border-emerald-400';
       case 'broken':
-        return 'bg-red-100 border-red-300';
+        return 'bg-red-50 border-red-500';
       case 'locked':
       case 'no_water':
-        return 'bg-orange-100 border-orange-300';
+        return 'bg-amber-50 border-amber-400';
       default:
         return 'bg-gray-100 border-gray-300';
     }
   };
 
-  // Center map when selected facility changes from outside (e.g. search list)
-  useEffect(() => {
-    if (selectedFacility) {
-      setViewState((prev) => ({
-        ...prev,
-        longitude: selectedFacility.longitude,
-        latitude: selectedFacility.latitude,
-        zoom: 15
-      }));
-    }
-  }, [selectedFacility]);
+  const isHotspot = (facility: Facility) => {
+    return facility.condition === 'broken' || (facility.confidenceScore || 100) < 60;
+  };
 
-  const mapStyleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL || 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
+  const activeMapStyle = mapMode === 'satellite' ? SATELLITE_STYLE : STREET_STYLE;
 
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full h-full relative rounded-2xl overflow-hidden shadow-inner">
       <Map
         ref={mapRef}
         mapLib={maplibregl}
         {...viewState}
         onMove={evt => setViewState(evt.viewState)}
-        mapStyle={mapStyleUrl}
+        mapStyle={activeMapStyle}
         style={{ width: '100%', height: '100%' }}
       >
-        <NavigationControl position="top-right" />
-        <GeolocateControl position="top-right" />
+        <NavigationControl position="bottom-right" />
+        <GeolocateControl position="bottom-right" />
 
+        {/* User Location Pulse Marker */}
         {userLocation && (
           <Marker
             longitude={userLocation.lng}
@@ -109,15 +156,17 @@ export default function CivicMap({ facilities, onSelectFacility, selectedFacilit
             anchor="center"
           >
             <div className="relative flex items-center justify-center">
-              <div className="absolute w-6 h-6 bg-blue-500 rounded-full animate-ping opacity-75"></div>
-              <div className="relative w-4 h-4 bg-white border-4 border-blue-600 rounded-full shadow-lg"></div>
+              <div className="absolute w-8 h-8 bg-blue-500 rounded-full animate-ping opacity-75"></div>
+              <div className="relative w-4 h-4 bg-white border-4 border-blue-600 rounded-full shadow-xl"></div>
             </div>
           </Marker>
         )}
 
+        {/* Facility Markers */}
         {facilities.map((facility) => {
           const isSelected = selectedFacility?.id === facility.id;
-          
+          const hotspotActive = showHotspots && isHotspot(facility);
+
           return (
             <Marker
               key={facility.id}
@@ -129,33 +178,91 @@ export default function CivicMap({ facilities, onSelectFacility, selectedFacilit
                 onSelectFacility(facility);
               }}
             >
-              <div 
-                className={`
-                  p-2 rounded-full border-2 cursor-pointer transition-all shadow-md
-                  ${getMarkerBg(facility.condition)}
-                  ${isSelected ? 'scale-125 ring-4 ring-blue-500 ring-opacity-50 z-50' : 'hover:scale-110'}
-                `}
-                title={facility.name}
-              >
-                {facility.type === 'toilet' ? (
-                  <div className={`font-bold ${getMarkerColor(facility.condition)}`} style={{fontSize: '18px'}}>🚻</div>
-                ) : (
-                  <Droplet className={`w-5 h-5 ${getMarkerColor(facility.condition)}`} />
+              <div className="relative flex flex-col items-center group cursor-pointer">
+                {/* Hotspot Outer Halo */}
+                {hotspotActive && (
+                  <div className="absolute -inset-2 bg-red-500/25 rounded-full animate-pulse blur-xs" />
                 )}
+
+                {/* Marker Body */}
+                <div 
+                  className={`
+                    relative p-2 rounded-full border-2 transition-all shadow-lg
+                    ${getMarkerBg(facility.condition)}
+                    ${isSelected ? 'scale-125 ring-4 ring-blue-500 ring-opacity-70 z-50 shadow-2xl' : 'hover:scale-115'}
+                  `}
+                  title={facility.name}
+                >
+                  {facility.type === 'toilet' ? (
+                    <div className={`font-bold ${getMarkerColor(facility.condition)} text-base sm:text-lg leading-none`}>
+                      🚻
+                    </div>
+                  ) : (
+                    <Droplet className={`w-4 h-4 sm:w-5 sm:h-5 ${getMarkerColor(facility.condition)} fill-current`} />
+                  )}
+                </div>
+
+                {/* Tiny Pin Pointer Stem */}
+                <div className="w-1.5 h-1.5 bg-gray-700 rotate-45 -mt-1 rounded-2xs" />
               </div>
             </Marker>
           );
         })}
       </Map>
 
-      {userLocation && (
+      {/* Top-Right Map Controls: Satellite/Street Switcher & Use My Location */}
+      <div className="absolute top-4 right-4 z-20 flex flex-col items-end space-y-2">
+        {/* View Toggle */}
+        <div className="bg-white/95 backdrop-blur-xs p-1 rounded-full shadow-xl border border-gray-200/90 flex items-center space-x-1">
+          <button
+            onClick={() => setMapMode('satellite')}
+            className={`flex items-center space-x-1 px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+              mapMode === 'satellite'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-gray-700 hover:text-blue-600'
+            }`}
+          >
+            <span>🛰️ Satellite</span>
+          </button>
+          <button
+            onClick={() => setMapMode('street')}
+            className={`flex items-center space-x-1 px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+              mapMode === 'street'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-gray-700 hover:text-blue-600'
+            }`}
+          >
+            <span>🗺️ Street</span>
+          </button>
+        </div>
+
+        {/* Use My Location Button */}
         <button
           onClick={handleRecenter}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow-lg font-medium text-sm text-gray-700 flex items-center hover:bg-gray-50 transition-colors z-10"
+          className="flex items-center space-x-1.5 bg-white/95 backdrop-blur-xs hover:bg-white text-blue-600 border border-gray-200/90 shadow-lg px-4 py-2 rounded-full text-xs font-bold transition transform active:scale-95"
         >
-          <LocateFixed className="w-4 h-4 mr-2 text-blue-600" />
-          Recenter
+          <Navigation className="w-3.5 h-3.5 fill-blue-600 text-blue-600" />
+          <span>Use My Location</span>
         </button>
+      </div>
+
+      {/* Top-Left Location Denied / Status Notification */}
+      {locationDenied && !dismissAlert && (
+        <div className="absolute top-4 left-4 z-20 max-w-xs sm:max-w-sm bg-amber-500 text-white px-4 py-3 rounded-2xl shadow-xl flex items-start space-x-3">
+          <AlertCircle className="w-5 h-5 text-white shrink-0 mt-0.5" />
+          <div className="text-xs">
+            <div className="font-extrabold text-sm mb-0.5">Location access was denied.</div>
+            <div className="opacity-95 leading-relaxed">
+              Click anywhere on the map or use the search bar to locate facilities manually.
+            </div>
+          </div>
+          <button
+            onClick={() => setDismissAlert(true)}
+            className="text-white/80 hover:text-white p-0.5"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       )}
     </div>
   );
