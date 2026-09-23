@@ -84,7 +84,7 @@ export default function MapPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f0f4f9]">
+    <div className="min-h-screen flex flex-col bg-[#F5EDF7]">
       {/* Top Navbar */}
       <Navbar
         onOpenTrackTicket={() => setShowTrackTicket(true)}
@@ -95,7 +95,7 @@ export default function MapPage() {
       <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
         <Link
           href="/"
-          className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-amber-600 transition"
+          className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-[#3D1860] transition"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Home Overview</span>
@@ -143,7 +143,7 @@ export default function MapPage() {
             {isLoading && (
               <div className="absolute inset-0 bg-white/60 backdrop-blur-xs z-30 flex items-center justify-center">
                 <div className="bg-white px-5 py-3 rounded-2xl shadow-lg border border-gray-100 flex items-center space-x-3">
-                  <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-[#3D1860] border-t-transparent rounded-full animate-spin"></div>
                   <span className="text-xs font-bold text-gray-700">Loading civic infrastructure...</span>
                 </div>
               </div>

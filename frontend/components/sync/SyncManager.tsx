@@ -94,7 +94,7 @@ export default function SyncManager() {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[100] flex justify-center pointer-events-none p-2">
-      <div className="bg-gray-900 text-white shadow-xl rounded-full px-4 py-2 flex items-center space-x-3 text-sm font-medium animate-in slide-in-from-top-4 pointer-events-auto">
+      <div className="bg-[#3D1860] border border-[#BB99CD]/40 text-[#F5EDF7] shadow-xl rounded-full px-4 py-2 flex items-center space-x-3 text-sm font-medium animate-in slide-in-from-top-4 pointer-events-auto">
         {!isOnline && (
           <>
             <WifiOff className="w-4 h-4 text-orange-400" />
@@ -104,18 +104,18 @@ export default function SyncManager() {
         
         {isOnline && isSyncing && (
           <>
-            <RefreshCw className="w-4 h-4 animate-spin text-amber-400" />
+            <RefreshCw className="w-4 h-4 animate-spin text-[#BB99CD]" />
             <span>{syncStatus}</span>
           </>
         )}
         
         {isOnline && !isSyncing && pendingCount > 0 && (
           <>
-            <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-[#BB99CD] rounded-full animate-pulse"></div>
             <span>{pendingCount} report{pendingCount > 1 ? 's' : ''} waiting to sync</span>
             <button 
               onClick={syncNow}
-              className="ml-2 bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full text-xs transition-colors"
+              className="ml-2 bg-[#643579] hover:bg-[#BB99CD] hover:text-[#3D1860] px-3 py-1 rounded-full text-xs transition-colors"
             >
               Sync now
             </button>

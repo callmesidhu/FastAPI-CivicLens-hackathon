@@ -25,8 +25,8 @@ export default function TicketSuccess({ ticketData, facility, onClose, onTrack }
         <div className="p-6 space-y-5 bg-gray-50">
           <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm text-center">
             <p className="text-xs uppercase tracking-wider font-bold text-gray-500 mb-1">Ticket Number</p>
-            <div className="flex items-center justify-center font-mono text-2xl font-black text-amber-800 tracking-tight">
-              <Ticket className="w-5 h-5 mr-2" />
+            <div className="flex items-center justify-center font-mono text-2xl font-black text-[#3D1860] tracking-tight">
+              <Ticket className="w-5 h-5 mr-2 text-[#643579]" />
               {ticketData.ticketNumber}
             </div>
           </div>
@@ -46,7 +46,7 @@ export default function TicketSuccess({ ticketData, facility, onClose, onTrack }
             </div>
             <div className="flex justify-between border-b border-gray-100 pb-2">
               <span className="text-gray-500">Status</span>
-              <span className="font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full capitalize">
+              <span className="font-semibold text-[#3D1860] bg-[#F5EDF7] border border-[#BB99CD] px-2 py-0.5 rounded-full capitalize">
                 ● {ticketData.status}
               </span>
             </div>
@@ -59,7 +59,7 @@ export default function TicketSuccess({ ticketData, facility, onClose, onTrack }
           <div className="pt-2 flex flex-col space-y-3">
             <button 
               onClick={() => onTrack(ticketData.ticketNumber)}
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 rounded-xl transition-colors"
+              className="w-full bg-[#3D1860] hover:bg-[#643579] text-white font-bold py-3 rounded-xl transition-colors shadow-md"
             >
               Track Ticket
             </button>

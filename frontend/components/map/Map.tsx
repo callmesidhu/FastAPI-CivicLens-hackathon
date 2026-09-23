@@ -156,8 +156,8 @@ export default function CivicMap({
             anchor="center"
           >
             <div className="relative flex items-center justify-center">
-              <div className="absolute w-8 h-8 bg-amber-400 rounded-full animate-ping opacity-75"></div>
-              <div className="relative w-4 h-4 bg-white border-4 border-amber-500 rounded-full shadow-xl"></div>
+              <div className="absolute w-8 h-8 bg-[#643579] rounded-full animate-ping opacity-75"></div>
+              <div className="relative w-4 h-4 bg-white border-4 border-[#3D1860] rounded-full shadow-xl"></div>
             </div>
           </Marker>
         )}
@@ -189,7 +189,7 @@ export default function CivicMap({
                   className={`
                     relative p-2 rounded-full border-2 transition-all shadow-lg
                     ${getMarkerBg(facility.condition)}
-                    ${isSelected ? 'scale-125 ring-4 ring-amber-400 ring-opacity-80 z-50 shadow-2xl' : 'hover:scale-115'}
+                    ${isSelected ? 'scale-125 ring-4 ring-[#BB99CD] ring-opacity-90 z-50 shadow-2xl' : 'hover:scale-115'}
                   `}
                   title={facility.name}
                 >
@@ -211,13 +211,13 @@ export default function CivicMap({
       {/* Top-Right Map Controls: Satellite/Street Switcher & Use My Location */}
       <div className="absolute top-4 right-4 z-20 flex flex-col items-end space-y-2">
         {/* View Toggle */}
-        <div className="bg-white/95 backdrop-blur-xs p-1 rounded-full shadow-xl border border-gray-200/90 flex items-center space-x-1">
+        <div className="bg-white/95 backdrop-blur-xs p-1 rounded-full shadow-xl border border-[#BB99CD]/40 flex items-center space-x-1">
           <button
             onClick={() => setMapMode('satellite')}
             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
               mapMode === 'satellite'
-                ? 'bg-amber-400 text-gray-950 font-black shadow-xs'
-                : 'text-gray-700 hover:text-amber-600'
+                ? 'bg-[#3D1860] text-white shadow-xs'
+                : 'text-gray-700 hover:text-[#3D1860]'
             }`}
           >
             <Satellite className="w-3.5 h-3.5" />
@@ -227,8 +227,8 @@ export default function CivicMap({
             onClick={() => setMapMode('street')}
             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${
               mapMode === 'street'
-                ? 'bg-amber-400 text-gray-950 font-black shadow-xs'
-                : 'text-gray-700 hover:text-amber-600'
+                ? 'bg-[#3D1860] text-white shadow-xs'
+                : 'text-gray-700 hover:text-[#3D1860]'
             }`}
           >
             <MapIcon className="w-3.5 h-3.5" />
@@ -239,16 +239,16 @@ export default function CivicMap({
         {/* Use My Location Button */}
         <button
           onClick={handleRecenter}
-          className="flex items-center space-x-1.5 bg-white/95 backdrop-blur-xs hover:bg-white text-amber-700 border border-gray-200/90 shadow-lg px-4 py-2 rounded-full text-xs font-bold transition transform active:scale-95"
+          className="flex items-center space-x-1.5 bg-white/95 backdrop-blur-xs hover:bg-[#F5EDF7] text-[#3D1860] border border-[#BB99CD]/50 shadow-lg px-4 py-2 rounded-full text-xs font-bold transition transform active:scale-95"
         >
-          <Navigation className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+          <Navigation className="w-3.5 h-3.5 fill-[#643579] text-[#643579]" />
           <span>Use My Location</span>
         </button>
       </div>
 
       {/* Top-Left Location Denied / Status Notification */}
       {locationDenied && !dismissAlert && (
-        <div className="absolute top-4 left-4 z-20 max-w-xs sm:max-w-sm bg-blue-600 text-white px-4 py-3 rounded-2xl shadow-xl flex items-start space-x-3">
+        <div className="absolute top-4 left-4 z-20 max-w-xs sm:max-w-sm bg-[#3D1860] border border-[#BB99CD]/40 text-white px-4 py-3 rounded-2xl shadow-xl flex items-start space-x-3">
           <AlertCircle className="w-5 h-5 text-white shrink-0 mt-0.5" />
           <div className="text-xs">
             <div className="font-extrabold text-sm mb-0.5">Location access was denied.</div>

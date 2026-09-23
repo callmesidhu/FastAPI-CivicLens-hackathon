@@ -44,7 +44,7 @@ export default function FiltersPanel({ filters, onFilterChange, searchQuery, onS
   return (
     <div className="absolute top-4 left-4 z-40 flex flex-col space-y-3">
       {/* Search Bar */}
-      <div className="bg-white rounded-full shadow-lg flex items-center px-4 py-2 w-72 md:w-96 border focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all">
+      <div className="bg-white rounded-full shadow-lg flex items-center px-4 py-2 w-72 md:w-96 border border-[#BB99CD]/40 focus-within:border-[#643579] focus-within:ring-2 focus-within:ring-[#BB99CD]/40 transition-all">
         <Search className="w-5 h-5 text-gray-400 mr-2" />
         <input 
           type="text" 
@@ -67,7 +67,7 @@ export default function FiltersPanel({ filters, onFilterChange, searchQuery, onS
           className="bg-white px-4 py-2 rounded-full shadow-lg flex items-center hover:bg-gray-50 transition-colors w-max text-sm font-medium text-gray-700"
           aria-label="Open filters"
         >
-          <Filter className="w-4 h-4 mr-2 text-blue-600" />
+          <Filter className="w-4 h-4 mr-2 text-[#3D1860]" />
           Filters
         </button>
       ) : (
@@ -89,7 +89,7 @@ export default function FiltersPanel({ filters, onFilterChange, searchQuery, onS
                 <select 
                   value={filters.type} 
                   onChange={handleTypeChange}
-                  className="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500 bg-white p-2 border"
+                  className="w-full rounded-lg border-gray-300 text-sm focus:border-[#643579] focus:ring-[#BB99CD] bg-white p-2 border"
                 >
                   <option value="all">All</option>
                   <option value="toilet">Toilets</option>
@@ -102,7 +102,7 @@ export default function FiltersPanel({ filters, onFilterChange, searchQuery, onS
                 <select 
                   value={filters.radius} 
                   onChange={handleRadiusChange}
-                  className="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500 bg-white p-2 border"
+                  className="w-full rounded-lg border-gray-300 text-sm focus:border-[#643579] focus:ring-[#BB99CD] bg-white p-2 border"
                 >
                   <option value="250">250 m</option>
                   <option value="500">500 m</option>
@@ -119,7 +119,7 @@ export default function FiltersPanel({ filters, onFilterChange, searchQuery, onS
                 <select 
                   value={filters.condition} 
                   onChange={handleConditionChange}
-                  className="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500 bg-white p-2 border"
+                  className="w-full rounded-lg border-gray-300 text-sm focus:border-[#643579] focus:ring-[#BB99CD] bg-white p-2 border"
                 >
                   <option value="all">Any</option>
                   <option value="usable">Usable</option>
@@ -134,7 +134,7 @@ export default function FiltersPanel({ filters, onFilterChange, searchQuery, onS
                 <select 
                   value={filters.availability} 
                   onChange={handleAvailabilityChange}
-                  className="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500 bg-white p-2 border"
+                  className="w-full rounded-lg border-gray-300 text-sm focus:border-[#643579] focus:ring-[#BB99CD] bg-white p-2 border"
                 >
                   <option value="all">Any</option>
                   <option value="available">Available</option>
@@ -149,7 +149,7 @@ export default function FiltersPanel({ filters, onFilterChange, searchQuery, onS
                 type="checkbox"
                 checked={filters.wheelchairAccessible}
                 onChange={handleAccessibilityChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-[#3D1860] focus:ring-[#643579] border-gray-300 rounded accent-[#3D1860]"
               />
               <label htmlFor="wheelchair" className="ml-2 block text-sm text-gray-700">
                 Wheelchair Accessible Only

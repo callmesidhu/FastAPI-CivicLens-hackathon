@@ -20,16 +20,16 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
 
   return (
     <>
-      <nav className="w-full bg-white border-b border-gray-100 sticky top-0 z-40 shadow-xs">
+      <nav className="w-full bg-white/95 backdrop-blur-md border-b border-[#BB99CD]/30 sticky top-0 z-40 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Brand */}
           <Link href="/" className="flex items-center space-x-3 hover:opacity-90 transition">
-            <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-xs overflow-hidden">
+            <div className="w-10 h-10 rounded-xl bg-white border border-[#BB99CD]/40 flex items-center justify-center shadow-xs overflow-hidden">
               <img src="/logo.png" alt="CivicLens Logo" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center space-x-1.5">
-                <span className="text-xl font-black tracking-tight text-gray-900">CIVICLENS</span>
+                <span className="text-xl font-black tracking-tight text-[#3D1860]">CIVICLENS</span>
               </div>
               <span className="text-xs text-gray-500 font-medium hidden sm:inline-block">
                 Neighborhood Intelligence &amp; Response Assistant
@@ -42,18 +42,18 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
             {/* Map Link */}
             <Link
               href="/map"
-              className="flex items-center space-x-1.5 text-sm font-semibold text-gray-700 hover:text-amber-600 px-3 py-1.5 rounded-lg transition"
+              className="flex items-center space-x-1.5 text-sm font-semibold text-gray-700 hover:text-[#3D1860] px-3 py-1.5 rounded-lg transition"
             >
-              <MapPin className="w-4 h-4 text-amber-500" />
+              <MapPin className="w-4 h-4 text-[#643579]" />
               <span className="hidden sm:inline">Public Map</span>
             </Link>
 
             {/* Track Ticket */}
             <button
               onClick={onOpenTrackTicket}
-              className="hidden md:flex items-center space-x-1.5 text-sm font-semibold text-gray-700 hover:text-amber-600 px-3 py-1.5 rounded-lg transition"
+              className="hidden md:flex items-center space-x-1.5 text-sm font-semibold text-gray-700 hover:text-[#3D1860] px-3 py-1.5 rounded-lg transition"
             >
-              <Ticket className="w-4 h-4 text-amber-500" />
+              <Ticket className="w-4 h-4 text-[#643579]" />
               <span>Track Ticket</span>
             </button>
 
@@ -61,9 +61,9 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
             {isAdmin && (
               <button
                 onClick={() => setIsAdminPortalOpen(true)}
-                className="flex items-center space-x-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-full transition shadow-2xs"
+                className="flex items-center space-x-1.5 bg-[#F5EDF7] hover:bg-[#BB99CD]/20 text-[#3D1860] border border-[#BB99CD]/50 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-full transition shadow-2xs"
               >
-                <Building2 className="w-3.5 h-3.5 text-indigo-600" />
+                <Building2 className="w-3.5 h-3.5 text-[#643579]" />
                 <span>Admin Portal</span>
               </button>
             )}
@@ -75,8 +75,8 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition shadow-2xs ${
                     isAdmin
-                      ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700'
-                      : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
+                      ? 'bg-[#3D1860] text-white border-[#3D1860] hover:bg-[#643579]'
+                      : 'bg-[#F5EDF7] text-[#3D1860] border-[#BB99CD] hover:bg-[#BB99CD]/30'
                   }`}
                 >
                   {isAdmin ? <Building2 className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
@@ -92,7 +92,7 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
                       <p className="text-[11px] text-gray-500 truncate">{user.email}</p>
                       <div className="mt-1">
                         <span className={`inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
-                          isAdmin ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-900'
+                          isAdmin ? 'bg-[#3D1860] text-white' : 'bg-[#F5EDF7] text-[#3D1860] border border-[#BB99CD]'
                         }`}>
                           {isAdmin ? 'Municipal Authority (Admin)' : 'Citizen Reporter'}
                         </span>
@@ -106,9 +106,9 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
                             setIsAdminPortalOpen(true);
                             setShowUserMenu(false);
                           }}
-                          className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-indigo-700 hover:bg-indigo-50 flex items-center space-x-2"
+                          className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-[#3D1860] hover:bg-[#F5EDF7] flex items-center space-x-2"
                         >
-                          <Building2 className="w-3.5 h-3.5 text-indigo-600" />
+                          <Building2 className="w-3.5 h-3.5 text-[#643579]" />
                           <span>Open Municipal Portal</span>
                         </button>
                       ) : null}
@@ -120,7 +120,7 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
                         }}
                         className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
                       >
-                        <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#643579]" />
                         <span>Switch to {isAdmin ? 'Citizen Reporter' : 'Municipal Admin'}</span>
                       </button>
 
@@ -141,9 +141,9 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
             ) : (
               <button
                 onClick={openLoginModal}
-                className="flex items-center space-x-1.5 text-xs sm:text-sm font-bold text-gray-700 hover:text-amber-600 bg-gray-100 hover:bg-gray-200 px-3.5 py-1.5 rounded-full transition shadow-2xs"
+                className="flex items-center space-x-1.5 text-xs sm:text-sm font-bold text-gray-700 hover:text-[#3D1860] bg-[#F5EDF7] hover:bg-[#BB99CD]/30 border border-[#BB99CD]/40 px-3.5 py-1.5 rounded-full transition shadow-2xs"
               >
-                <User className="w-3.5 h-3.5 text-gray-600" />
+                <User className="w-3.5 h-3.5 text-[#643579]" />
                 <span>Sign In / Role</span>
               </button>
             )}
@@ -151,7 +151,7 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
             {/* Primary Action: Report Issue */}
             <button
               onClick={onOpenReport || onOpenTrackTicket}
-              className="flex items-center space-x-1.5 bg-amber-400 hover:bg-amber-500 text-gray-950 text-xs sm:text-sm font-black px-4 py-2 rounded-full shadow-sm hover:shadow transition transform active:scale-95"
+              className="flex items-center space-x-1.5 bg-[#3D1860] hover:bg-[#643579] text-[#F5EDF7] text-xs sm:text-sm font-bold px-4 py-2 rounded-full shadow-sm hover:shadow transition transform active:scale-95"
             >
               <Flag className="w-3.5 h-3.5" />
               <span>Report Issue</span>

@@ -20,7 +20,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f0f4f9]">
+    <div className="min-h-screen flex flex-col bg-[#F5EDF7]">
       {/* Top Sticky Navbar */}
       <Navbar
         onOpenTrackTicket={() => setShowTrackTicket(true)}

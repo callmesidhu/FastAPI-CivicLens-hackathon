@@ -41,7 +41,7 @@ export default function FacilityList({ facilities, selectedFacility, onSelectFac
             <div 
               key={facility.id}
               onClick={() => onSelectFacility(facility)}
-              className={`p-4 border-b cursor-pointer transition-colors hover:bg-gray-50 ${isSelected ? 'bg-blue-50/50 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'}`}
+              className={`p-4 border-b cursor-pointer transition-colors hover:bg-[#F5EDF7]/50 ${isSelected ? 'bg-[#F5EDF7] border-l-4 border-l-[#3D1860]' : 'border-l-4 border-l-transparent'}`}
             >
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-gray-900 text-base">{facility.name}</h3>
@@ -55,12 +55,12 @@ export default function FacilityList({ facilities, selectedFacility, onSelectFac
               <div className="flex items-center text-sm text-gray-600 mb-3">
                 {facility.type === 'toilet' ? (
                   <>
-                    <Users className="w-4 h-4 mr-1.5 text-blue-600" />
+                    <Users className="w-4 h-4 mr-1.5 text-[#643579]" />
                     <span>Public Toilet</span>
                   </>
                 ) : (
                   <>
-                    <Droplet className="w-4 h-4 mr-1.5 text-blue-600 fill-blue-600" />
+                    <Droplet className="w-4 h-4 mr-1.5 text-[#643579] fill-[#643579]" />
                     <span>Drinking Water</span>
                   </>
                 )}
@@ -73,14 +73,14 @@ export default function FacilityList({ facilities, selectedFacility, onSelectFac
                 </span>
                 
                 {facility.accessibility.wheelchairAccessible && (
-                  <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
+                  <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md text-xs font-medium bg-[#F5EDF7] text-[#3D1860] border border-[#BB99CD]/40">
                     <Accessibility className="w-3.5 h-3.5" />
                     <span>Accessible</span>
                   </span>
                 )}
 
                 {facility.isUserReported && (
-                  <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700">
+                  <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md text-xs font-medium bg-[#F5EDF7] text-[#643579] border border-[#BB99CD]/40">
                     <AlertTriangle className="w-3.5 h-3.5" />
                     <span>User Reported</span>
                   </span>

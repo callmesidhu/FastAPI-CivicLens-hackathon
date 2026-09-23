@@ -63,13 +63,13 @@ export default function AdminPortalModal({ isOpen, onClose }: AdminPortalModalPr
         {/* Header */}
         <div className="p-5 sm:p-6 border-b border-gray-100 bg-gray-50/70 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+            <div className="w-10 h-10 rounded-2xl bg-[#3D1860] text-white flex items-center justify-center shadow-xs">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <h2 className="text-lg font-black text-gray-900">Municipal Authority Portal</h2>
-                <span className="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">
+                <span className="bg-[#F5EDF7] border border-[#BB99CD] text-[#3D1860] text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">
                   Admin Access
                 </span>
               </div>
@@ -138,8 +138,8 @@ export default function AdminPortalModal({ isOpen, onClose }: AdminPortalModalPr
               onClick={() => setStatusFilter(filterKey)}
               className={`px-3 py-1 rounded-full font-bold capitalize transition ${
                 statusFilter === filterKey
-                  ? 'bg-indigo-600 text-white shadow-2xs'
-                  : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'
+                  ? 'bg-[#3D1860] text-[#F5EDF7] shadow-2xs'
+                  : 'bg-white border border-[#BB99CD]/40 text-gray-600 hover:bg-[#F5EDF7]'
               }`}
             >
               {filterKey === 'all' ? 'All Tickets' : filterKey.replace('_', ' ')}
@@ -168,7 +168,7 @@ export default function AdminPortalModal({ isOpen, onClose }: AdminPortalModalPr
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                     <div className="flex items-center space-x-2.5">
-                      <span className="font-mono text-sm font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-lg">
+                      <span className="font-mono text-sm font-black text-[#3D1860] bg-[#F5EDF7] border border-[#BB99CD]/60 px-2.5 py-1 rounded-lg">
                         {ticket.ticketNumber}
                       </span>
                       <span

@@ -79,11 +79,11 @@ export default function FacilityDetails({ facility, onClose }: FacilityDetailsPr
           )}
 
           {facility.isUserReported ? (
-            <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-800 px-3 py-2 rounded-lg text-sm flex items-start">
-              <Flag className="w-5 h-5 mr-2 shrink-0 text-blue-500" />
+            <div className="mb-4 bg-[#F5EDF7] border border-[#BB99CD]/60 text-[#3D1860] px-3 py-2 rounded-lg text-sm flex items-start">
+              <Flag className="w-5 h-5 mr-2 shrink-0 text-[#643579]" />
               <div>
                 <p className="font-semibold">Recent User Report</p>
-                <p className="text-blue-700/80 mt-0.5 text-xs">A user recently reported a change in condition. Not yet verified.</p>
+                <p className="text-[#643579] mt-0.5 text-xs">A user recently reported a change in condition. Not yet verified.</p>
               </div>
             </div>
           ) : isStale && (
@@ -103,12 +103,12 @@ export default function FacilityDetails({ facility, onClose }: FacilityDetailsPr
                 <span className="font-medium text-gray-700 inline-flex items-center">
                   {facility.type === 'toilet' ? (
                     <>
-                      <Users className="w-4 h-4 mr-1 text-blue-600" />
+                      <Users className="w-4 h-4 mr-1 text-[#643579]" />
                       <span>Public Toilet</span>
                     </>
                   ) : (
                     <>
-                      <Droplet className="w-4 h-4 mr-1 text-blue-600 fill-blue-600" />
+                      <Droplet className="w-4 h-4 mr-1 text-[#643579] fill-[#643579]" />
                       <span>Drinking Water</span>
                     </>
                   )}
@@ -116,7 +116,7 @@ export default function FacilityDetails({ facility, onClose }: FacilityDetailsPr
                 {facility.distanceMeters !== undefined && (
                   <>
                     <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                    <span className="font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{getDistanceText(facility.distanceMeters)}</span>
+                    <span className="font-medium text-[#3D1860] bg-[#F5EDF7] px-2 py-0.5 rounded-full border border-[#BB99CD]/30">{getDistanceText(facility.distanceMeters)}</span>
                   </>
                 )}
               </div>
@@ -150,11 +150,11 @@ export default function FacilityDetails({ facility, onClose }: FacilityDetailsPr
 
             <div className="grid grid-cols-2 gap-3">
               {facility.accessibility.wheelchairAccessible && (
-                <div className="flex flex-col p-3 bg-blue-50 rounded-lg">
-                  <p className="text-[10px] text-blue-600/80 uppercase font-bold tracking-wider mb-1">Accessibility</p>
+                <div className="flex flex-col p-3 bg-[#F5EDF7] border border-[#BB99CD]/40 rounded-lg">
+                  <p className="text-[10px] text-[#643579] uppercase font-bold tracking-wider mb-1">Accessibility</p>
                   <div className="flex items-center space-x-2">
-                    <Accessibility className="w-4 h-4 text-blue-600" />
-                    <p className="font-semibold text-sm text-blue-800">Wheelchair</p>
+                    <Accessibility className="w-4 h-4 text-[#3D1860]" />
+                    <p className="font-semibold text-sm text-[#3D1860]">Wheelchair</p>
                   </div>
                 </div>
               )}
@@ -185,7 +185,7 @@ export default function FacilityDetails({ facility, onClose }: FacilityDetailsPr
             <div className="pt-2 flex gap-3">
               <button 
                 onClick={handleNavigate}
-                className="flex-1 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition-colors"
+                className="flex-1 flex items-center justify-center bg-[#3D1860] hover:bg-[#643579] text-[#F5EDF7] py-3 rounded-xl font-medium transition-colors shadow-2xs"
               >
                 <Navigation2 className="w-4 h-4 mr-2" />
                 Navigate

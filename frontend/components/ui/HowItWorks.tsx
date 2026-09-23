@@ -7,50 +7,50 @@ export default function HowItWorks() {
   const steps = [
     {
       num: 1,
-      numBg: 'bg-amber-50 text-amber-700 border border-amber-200',
+      numBg: 'bg-[#F5EDF7] text-[#3D1860] border border-[#BB99CD]',
       title: '1. Take a Photo',
       description:
         'Snap or upload a picture of the amenity or issue. Your phone GPS marks the location automatically.',
-      footerIcon: <Camera className="w-3.5 h-3.5 text-amber-600" />,
+      footerIcon: <Camera className="w-3.5 h-3.5 text-[#643579]" />,
       footerText: 'Camera & Location',
-      footerColor: 'text-amber-700',
+      footerColor: 'text-[#643579]',
     },
     {
       num: 2,
-      numBg: 'bg-blue-50 text-blue-700 border border-blue-200',
+      numBg: 'bg-[#BB99CD]/25 text-[#3D1860] border border-[#BB99CD]',
       title: '2. Ward Assigned',
       description:
         'CivicLens automatically links your report to the correct city ward and assigns it to the local municipal supervisor.',
-      footerIcon: <MapPin className="w-3.5 h-3.5 text-blue-600" />,
+      footerIcon: <MapPin className="w-3.5 h-3.5 text-[#3D1860]" />,
       footerText: 'Automatic Ward Routing',
-      footerColor: 'text-blue-700',
+      footerColor: 'text-[#3D1860]',
     },
     {
       num: 3,
-      numBg: 'bg-indigo-50 text-indigo-600 border border-indigo-200',
+      numBg: 'bg-[#643579]/15 text-[#3D1860] border border-[#643579]/30',
       title: '3. Crew Dispatched',
       description:
         'Field response sanitation and plumbing crews are sent promptly to clean or repair the facility before problems escalate.',
-      footerIcon: <Truck className="w-3.5 h-3.5 text-indigo-600" />,
+      footerIcon: <Truck className="w-3.5 h-3.5 text-[#643579]" />,
       footerText: 'Fast Response Timelines',
-      footerColor: 'text-indigo-600',
+      footerColor: 'text-[#643579]',
     },
     {
       num: 4,
-      numBg: 'bg-emerald-50 text-emerald-600 border border-emerald-200',
+      numBg: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
       title: '4. Verified Cleaned',
       description:
         'Crews upload photo proof once the facility is cleaned or restored. Citizens can inspect resolution evidence in real time.',
       footerIcon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />,
       footerText: 'Photo Proof Verified',
-      footerColor: 'text-emerald-600',
+      footerColor: 'text-emerald-700',
     },
   ];
 
   return (
     <section className="w-full py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
       {/* Badge */}
-      <div className="inline-flex items-center space-x-1.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold px-3.5 py-1 rounded-full mb-3 uppercase tracking-wider shadow-2xs">
+      <div className="inline-flex items-center space-x-1.5 bg-[#F5EDF7] border border-[#BB99CD] text-[#3D1860] text-xs font-extrabold px-3.5 py-1 rounded-full mb-3 uppercase tracking-wider shadow-2xs">
         <span>SIMPLE 4-STEP PROCESS</span>
       </div>
 

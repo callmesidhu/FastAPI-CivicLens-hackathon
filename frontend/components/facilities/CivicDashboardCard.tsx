@@ -33,12 +33,12 @@ export default function CivicDashboardCard({
   const hotspotCount = facilities.filter(f => (f.confidenceScore || 100) < 60 || f.condition === 'broken').length;
 
   return (
-    <div className="w-full bg-white rounded-3xl border border-gray-200/80 shadow-xs p-6 md:p-8 mb-6">
+    <div className="w-full bg-white rounded-3xl border border-[#BB99CD]/40 shadow-xs p-6 md:p-8 mb-6">
       {/* Card Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
         <div>
-          <div className="inline-flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full mb-3">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <div className="inline-flex items-center space-x-1.5 bg-[#F5EDF7] border border-[#BB99CD] text-[#3D1860] text-xs font-black px-3 py-1 rounded-full mb-3">
+            <span className="w-2 h-2 rounded-full bg-[#643579] animate-pulse"></span>
             <span>OPEN CIVIC DATA</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
@@ -58,13 +58,13 @@ export default function CivicDashboardCard({
       </div>
 
       {/* Inner Banner */}
-      <div className="bg-gray-50/80 border border-gray-200/60 rounded-2xl p-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#F5EDF7] border border-[#BB99CD]/40 rounded-2xl p-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-3.5">
-          <div className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center shadow-2xs overflow-hidden p-1">
+          <div className="w-10 h-10 rounded-xl bg-white border border-[#BB99CD]/40 flex items-center justify-center shadow-2xs overflow-hidden p-1">
             <img src="/logo.png" alt="CivicLens" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h3 className="font-bold text-gray-900 text-sm sm:text-base">
+            <h3 className="font-bold text-[#3D1860] text-sm sm:text-base">
               Keralam Civic Transparency &amp; Facility Awareness Map
             </h3>
             <p className="text-xs text-gray-500">
@@ -74,8 +74,8 @@ export default function CivicDashboardCard({
         </div>
 
         <div className="shrink-0">
-          <span className="inline-flex items-center space-x-1.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-full">
-            <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+          <span className="inline-flex items-center space-x-1.5 bg-[#3D1860] border border-[#3D1860] text-[#F5EDF7] text-xs font-bold px-3 py-1.5 rounded-full">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#BB99CD]" />
             <span>Public Civic Oversight</span>
           </span>
         </div>
@@ -164,7 +164,7 @@ export default function CivicDashboardCard({
           <select
             value={filters.status}
             onChange={(e) => onFilterChange({ ...filters, status: e.target.value })}
-            className="w-full bg-gray-50/70 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-amber-500 focus:bg-white transition"
+            className="w-full bg-gray-50/70 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-[#643579] focus:bg-white transition"
           >
             <option value="all">All Statuses</option>
             <option value="clean">Clean (Verified)</option>
@@ -183,7 +183,7 @@ export default function CivicDashboardCard({
           <select
             value={filters.radius}
             onChange={(e) => onFilterChange({ ...filters, radius: parseInt(e.target.value, 10) })}
-            className="w-full bg-gray-50/70 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-amber-500 focus:bg-white transition"
+            className="w-full bg-gray-50/70 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-[#643579] focus:bg-white transition"
           >
             <option value="50000">All Wards (50 km)</option>
             <option value="1000">Within 1 km</option>
@@ -201,7 +201,7 @@ export default function CivicDashboardCard({
           <select
             value={filters.type}
             onChange={(e) => onFilterChange({ ...filters, type: e.target.value })}
-            className="w-full bg-gray-50/70 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-amber-500 focus:bg-white transition"
+            className="w-full bg-gray-50/70 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-[#643579] focus:bg-white transition"
           >
             <option value="all">All Facilities</option>
             <option value="water">Drinking Water Points</option>
@@ -217,7 +217,7 @@ export default function CivicDashboardCard({
           <select
             value={filters.dateRange}
             onChange={(e) => onFilterChange({ ...filters, dateRange: e.target.value })}
-            className="w-full bg-gray-50/70 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-amber-500 focus:bg-white transition"
+            className="w-full bg-gray-50/70 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 outline-none focus:border-[#643579] focus:bg-white transition"
           >
             <option value="all">All Time</option>
             <option value="24h">Past 24 Hours</option>
@@ -238,7 +238,7 @@ export default function CivicDashboardCard({
               value={filters.searchQuery}
               onChange={(e) => onFilterChange({ ...filters, searchQuery: e.target.value })}
               placeholder="Search landmark, facility..."
-              className="w-full bg-gray-50/70 border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-gray-800 outline-none focus:border-amber-500 focus:bg-white transition"
+              className="w-full bg-gray-50/70 border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-gray-800 outline-none focus:border-[#643579] focus:bg-white transition"
             />
           </div>
         </div>

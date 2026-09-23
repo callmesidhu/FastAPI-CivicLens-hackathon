@@ -57,7 +57,7 @@ export default function TrackTicket({ initialTicketNumber = '', onClose }: Track
                 <input
                   type="text"
                   placeholder="e.g. CF-1042"
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none font-mono uppercase"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#BB99CD] focus:border-[#643579] outline-none font-mono uppercase"
                   value={ticketNumber}
                   onChange={(e) => setTicketNumber(e.target.value.toUpperCase())}
                 />
@@ -65,7 +65,7 @@ export default function TrackTicket({ initialTicketNumber = '', onClose }: Track
               <button 
                 type="submit"
                 disabled={isLoading || !ticketNumber.trim()}
-                className="bg-amber-400 hover:bg-amber-500 disabled:opacity-50 text-gray-950 px-5 rounded-xl font-black transition-colors"
+                className="bg-[#3D1860] hover:bg-[#643579] disabled:opacity-50 text-[#F5EDF7] px-5 rounded-xl font-bold transition-colors"
               >
                 {isLoading ? <span className="animate-pulse">...</span> : 'Track'}
               </button>
@@ -81,16 +81,16 @@ export default function TrackTicket({ initialTicketNumber = '', onClose }: Track
 
           {ticketData && (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex justify-between items-center">
+              <div className="bg-[#F5EDF7] border border-[#BB99CD]/60 rounded-xl p-4 flex justify-between items-center">
                 <div>
-                  <p className="text-xs uppercase font-bold text-amber-700 mb-1">Status</p>
-                  <p className="font-bold text-lg text-amber-950 capitalize flex items-center">
-                    <span className="w-2.5 h-2.5 bg-amber-500 rounded-full mr-2 animate-pulse"></span>
+                  <p className="text-xs uppercase font-bold text-[#643579] mb-1">Status</p>
+                  <p className="font-bold text-lg text-[#3D1860] capitalize flex items-center">
+                    <span className="w-2.5 h-2.5 bg-[#643579] rounded-full mr-2 animate-pulse"></span>
                     {ticketData.status}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs uppercase font-bold text-amber-700 mb-1">Priority</p>
+                  <p className="text-xs uppercase font-bold text-[#643579] mb-1">Priority</p>
                   <p className={`font-bold capitalize ${ticketData.priority === 'high' ? 'text-red-600' : 'text-orange-600'}`}>
                     {ticketData.priority}
                   </p>

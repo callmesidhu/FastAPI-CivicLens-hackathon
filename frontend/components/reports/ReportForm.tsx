@@ -102,7 +102,7 @@ export default function ReportForm({ facility, onClose, onSuccess }: ReportFormP
               {conditions.map(c => (
                 <label 
                   key={c.id} 
-                  className={`flex items-start p-3 border rounded-xl cursor-pointer transition-colors ${condition === c.id ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'}`}
+                  className={`flex items-start p-3 border rounded-xl cursor-pointer transition-colors ${condition === c.id ? 'border-[#3D1860] bg-[#F5EDF7]' : 'border-gray-200 hover:bg-[#F5EDF7]/50'}`}
                 >
                   <input 
                     type="radio" 
@@ -110,11 +110,11 @@ export default function ReportForm({ facility, onClose, onSuccess }: ReportFormP
                     value={c.id} 
                     checked={condition === c.id}
                     onChange={(e) => setCondition(e.target.value)}
-                    className="mt-0.5 w-4 h-4 text-amber-500 focus:ring-amber-500"
+                    className="mt-0.5 w-4 h-4 text-[#3D1860] focus:ring-[#643579]"
                   />
                   <div className="ml-3">
-                    <p className={`font-semibold text-sm ${condition === c.id ? 'text-amber-950' : 'text-gray-800'}`}>{c.label}</p>
-                    <p className={`text-xs mt-0.5 ${condition === c.id ? 'text-amber-700' : 'text-gray-500'}`}>{c.desc}</p>
+                    <p className={`font-semibold text-sm ${condition === c.id ? 'text-[#3D1860]' : 'text-gray-800'}`}>{c.label}</p>
+                    <p className={`text-xs mt-0.5 ${condition === c.id ? 'text-[#643579]' : 'text-gray-500'}`}>{c.desc}</p>
                   </div>
                 </label>
               ))}
@@ -125,7 +125,7 @@ export default function ReportForm({ facility, onClose, onSuccess }: ReportFormP
             <label className="block font-bold text-gray-800 mb-2">Description <span className="font-normal text-gray-500 text-sm">(optional)</span></label>
             <textarea
               rows={3}
-              className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+              className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#BB99CD] focus:border-[#643579] outline-none"
               placeholder="Tell us what you observed..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -149,7 +149,7 @@ export default function ReportForm({ facility, onClose, onSuccess }: ReportFormP
               <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <Camera className="w-6 h-6 text-gray-400 mb-1" />
-                  <p className="text-sm text-gray-500"><span className="font-semibold text-amber-600">Click to upload</span> or drag</p>
+                  <p className="text-sm text-gray-500"><span className="font-semibold text-[#3D1860]">Click to upload</span> or drag</p>
                 </div>
                 <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
               </label>
@@ -166,7 +166,7 @@ export default function ReportForm({ facility, onClose, onSuccess }: ReportFormP
           <button 
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-amber-400 hover:bg-amber-500 disabled:opacity-70 text-gray-950 font-black py-3 rounded-xl transition-colors mt-4 flex justify-center items-center"
+            className="w-full bg-[#3D1860] hover:bg-[#643579] disabled:opacity-70 text-[#F5EDF7] font-bold py-3 rounded-xl transition-colors mt-4 flex justify-center items-center shadow-md"
           >
             {isSubmitting ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
