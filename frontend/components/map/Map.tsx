@@ -7,6 +7,13 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { Facility } from '@/types';
 import { Droplet, MapPin, LocateFixed, AlertCircle, X, Flame, Users, Satellite, Map as MapIcon, Navigation } from 'lucide-react';
 
+export interface MapRoute {
+  coordinates: [number, number][];
+  distanceMeters: number;
+  durationSeconds: number;
+  destinationName: string;
+}
+
 interface CivicMapProps {
   facilities: Facility[];
   onSelectFacility: (facility: Facility | null) => void;
@@ -17,6 +24,8 @@ interface CivicMapProps {
   showHotspots?: boolean;
   radius?: number; // metres — drives auto-zoom + circle
   is3D?: boolean;
+  activeRoute?: MapRoute | null;
+  onClearRoute?: () => void;
 }
 
 export interface CivicMapHandle {
@@ -112,11 +121,33 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
   showHotspots = true,
   radius,
   is3D = false,
+  activeRoute = null,
+  onClearRoute,
 }, ref) {
   const mapRef = useRef<MapRef>(null);
   const [mapMode, setMapMode] = useState<'satellite' | 'street'>('satellite');
   const [dismissAlert, setDismissAlert] = useState(false);
   const [locating, setLocating] = useState(false);
+
+  // Auto-fit camera when navigation route is set
+  useEffect(() => {
+    if (activeRoute && activeRoute.coordinates.length > 1 && mapRef.current) {
+      const lngs = activeRoute.coordinates.map((c) => c[0]);
+      const lats = activeRoute.coordinates.map((c) => c[1]);
+      const minLng = Math.min(...lngs);
+      const maxLng = Math.max(...lngs);
+      const minLat = Math.min(...lats);
+      const maxLat = Math.max(...lats);
+
+      mapRef.current.fitBounds(
+        [
+          [minLng, minLat],
+          [maxLng, maxLat],
+        ],
+        { padding: { top: 130, bottom: 220, left: 60, right: 60 }, duration: 1000 }
+      );
+    }
+  }, [activeRoute]);
 
   const [viewState, setViewState] = useState({
     longitude: userLocation?.lng || 76.3656, // Default around Jain University, Kakkanad, Kochi
@@ -329,6 +360,106 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
           );
         })()}
 
+        {/* Active In-App Navigation Route Layer */}
+        {activeRoute && activeRoute.coordinates.length > 1 && (
+          <Source
+            id="active-route"
+            type="geojson"
+            data={{
+              type: 'FeatureCollection',
+              features: [
+                {
+                  type: 'Feature',
+                  properties: {},
+                  geometry: {
+                    type: 'LineString',
+                    coordinates: activeRoute.coordinates,
+                  },
+                },
+                {
+                  type: 'Feature',
+                  properties: {},
+                  geometry: {
+                    type: 'MultiPoint',
+                    coordinates: activeRoute.coordinates,
+                  },
+                },
+              ],
+            }}
+          >
+            {/* Outer route casing / glow */}
+            <Layer
+              id="route-casing"
+              type="line"
+              filter={['==', '$type', 'LineString']}
+              layout={{
+                'line-join': 'round',
+                'line-cap': 'round',
+              }}
+              paint={{
+                'line-color': '#1d4ed8',
+                'line-width': 10,
+                'line-opacity': 0.6,
+              }}
+            />
+            {/* Main vibrant navigation route line */}
+            <Layer
+              id="route-line"
+              type="line"
+              filter={['==', '$type', 'LineString']}
+              layout={{
+                'line-join': 'round',
+                'line-cap': 'round',
+              }}
+              paint={{
+                'line-color': '#2563eb',
+                'line-width': 6,
+              }}
+            />
+            {/* White waypoint dot markers along turn corners (like user screenshot) */}
+            <Layer
+              id="route-points"
+              type="circle"
+              filter={['==', '$type', 'Point']}
+              paint={{
+                'circle-radius': 4.5,
+                'circle-color': '#ffffff',
+                'circle-stroke-width': 2.5,
+                'circle-stroke-color': '#1d4ed8',
+              }}
+            />
+          </Source>
+        )}
+
+        {/* Floating ETA Badge at Destination (pixel-matched to user screenshot) */}
+        {activeRoute && activeRoute.coordinates.length > 0 && (
+          <Marker
+            longitude={activeRoute.coordinates[activeRoute.coordinates.length - 1][0]}
+            latitude={activeRoute.coordinates[activeRoute.coordinates.length - 1][1]}
+            anchor="bottom"
+            offset={[0, -50]}
+            style={{ zIndex: 25 }}
+          >
+            <div className="bg-white/98 backdrop-blur-md rounded-xl shadow-2xl border-2 border-gray-800/80 px-3 py-1.5 flex flex-col items-center animate-in zoom-in-95 pointer-events-auto select-none">
+              <div className="flex items-center gap-1.5 text-xs font-black text-gray-900">
+                <span className="text-sm">🚗</span>
+                <span>
+                  {activeRoute.durationSeconds > 60
+                    ? `${Math.round(activeRoute.durationSeconds / 60)} min`
+                    : '1 min'}
+                </span>
+              </div>
+              <div className="text-[11px] text-gray-600 font-bold">
+                {activeRoute.distanceMeters >= 1000
+                  ? `${(activeRoute.distanceMeters / 1000).toFixed(1)} km`
+                  : `${Math.round(activeRoute.distanceMeters)}m`}
+              </div>
+              {/* Pointer beak */}
+              <div className="w-2.5 h-2.5 bg-white border-r-2 border-b-2 border-gray-800/80 rotate-45 -mb-2 mt-0.5" />
+            </div>
+          </Marker>
+        )}
+
         {/* User Location Marker — Rendered on map canvas with zIndex 20 (below bottom sheet z-30) */}
         {userLocation && (
           <Marker
@@ -351,6 +482,30 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
           </Marker>
         )}
       </Map>
+
+      {/* Floating Active Navigation Header Bar */}
+      {activeRoute && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 bg-[#3D1860] text-white px-4 py-2.5 rounded-full shadow-2xl border border-[#BB99CD]/50 animate-in slide-in-from-top-4 duration-200">
+          <Navigation className="w-4 h-4 fill-current text-[#BB99CD] animate-pulse shrink-0" />
+          <div className="text-xs font-bold truncate max-w-[180px] sm:max-w-xs">
+            {activeRoute.destinationName}
+          </div>
+          <span className="text-[11px] bg-white/20 px-2 py-0.5 rounded-full font-extrabold text-[#F5EDF7] shrink-0">
+            {activeRoute.durationSeconds > 60
+              ? `${Math.round(activeRoute.durationSeconds / 60)} min`
+              : '1 min'}
+          </span>
+          {onClearRoute && (
+            <button
+              onClick={onClearRoute}
+              className="p-1 hover:bg-white/20 rounded-full transition cursor-pointer text-white/80 hover:text-white shrink-0 ml-1"
+              title="End Navigation"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Floating "My Location" Floating Action Button */}
       <div className="absolute bottom-24 right-4 z-20">
