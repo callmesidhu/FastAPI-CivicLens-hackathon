@@ -36,9 +36,18 @@ class FacilityResponse(BaseModel):
     distanceMeters: Optional[float] = None
     confidenceScore: Optional[int] = None
     confidenceLevel: Optional[str] = None
+    recommendationScore: Optional[float] = None
     isUserReported: Optional[bool] = False
     
     model_config = ConfigDict(populate_by_name=True)
 
 class FacilityListResponse(BaseModel):
     data: List[FacilityResponse]
+
+class RouteSearchRequest(BaseModel):
+    path: List[List[float]] = Field(..., description="List of [longitude, latitude] coordinates forming the route")
+    maxDistance: int = Field(1000, description="Radius in meters from the route")
+    type: Optional[str] = None
+    condition: Optional[str] = None
+    wheelchairAccessible: Optional[bool] = None
+    availability: Optional[str] = None

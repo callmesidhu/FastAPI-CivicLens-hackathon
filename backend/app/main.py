@@ -6,11 +6,23 @@ from app.db.database import connect_to_mongo, close_mongo_connection
 from app.routes import facilities, reports, tickets, uploads, auth, location
 from contextlib import asynccontextmanager
 import os
+import sys
+
+# Add backend directory to sys.path if not present (to allow importing ai module easily)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+try:
+    from ai.inference import load_models
+except ImportError:
+    pass
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Ensure storage dir exists
     os.makedirs("storage", exist_ok=True)
+    try:
+        load_models()
+    except NameError:
+        pass
     await connect_to_mongo()
     yield
     await close_mongo_connection()

@@ -1,9 +1,16 @@
 from fastapi import APIRouter, Query, HTTPException, Depends
 from typing import Optional, List
-from app.schemas.facility import FacilityListResponse, FacilityResponse
+from app.schemas.facility import FacilityListResponse, FacilityResponse, RouteSearchRequest
 from app.db.database import db
 from app.core.config import settings
-from app.utils.scoring import calculate_freshness_and_confidence
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+try:
+    from ai.inference import predict_confidence, predict_recommendation_score
+except ImportError:
+    predict_confidence = None
+    predict_recommendation_score = None
 from bson import ObjectId
 
 router = APIRouter()
@@ -13,9 +20,6 @@ def get_collection():
 
 def format_facility(doc: dict, distance_meters: Optional[float] = None) -> dict:
     last_updated = doc.get("lastUpdated", "")
-    scoring = calculate_freshness_and_confidence(last_updated)
-    
-    # Check if there is a recent report in the doc (we'll join this in the queries)
     recent_report = doc.get("recentReport")
     
     is_user_reported = False
@@ -26,10 +30,28 @@ def format_facility(doc: dict, distance_meters: Optional[float] = None) -> dict:
         is_user_reported = True
         condition = recent_report.get("condition", condition)
         last_updated_time = recent_report.get("createdAt", last_updated)
-        scoring = calculate_freshness_and_confidence(last_updated_time)
-        # Decay confidence by 20% for unverified user reports
-        scoring["confidenceScore"] = max(0, scoring["confidenceScore"] - 20)
+
+    # ML Inference for Confidence
+    inference_input = {
+        "reportsCount": doc.get("reportsCount", 1),
+        "upvotes": doc.get("upvotes", 0),
+        "downvotes": doc.get("downvotes", 0),
+        "lastUpdated": last_updated_time,
+        "condition": condition
+    }
+    
+    if predict_confidence:
+        scoring = predict_confidence(inference_input)
+    else:
+        scoring = {"confidenceScore": 50, "confidenceLevel": "moderate", "confidenceProb": 0.5}
+        
+    if is_user_reported and not doc.get("verified"):
+        scoring["confidenceScore"] = max(0, scoring["confidenceScore"] - 10)
         scoring["confidenceLevel"] = "moderate" if scoring["confidenceScore"] >= 50 else "low"
+        
+    rec_score = 0.0
+    if predict_recommendation_score and distance_meters is not None:
+        rec_score = predict_recommendation_score(distance_meters, condition, scoring.get("confidenceProb", 0.5))
 
     result = {
         "id": str(doc["_id"]),
@@ -44,6 +66,7 @@ def format_facility(doc: dict, distance_meters: Optional[float] = None) -> dict:
         "lastUpdated": last_updated_time,
         "confidenceScore": scoring["confidenceScore"],
         "confidenceLevel": scoring["confidenceLevel"],
+        "recommendationScore": rec_score,
         "isUserReported": is_user_reported
     }
     
@@ -133,6 +156,9 @@ async def get_nearby_facilities(
             doc["recentReport"] = recent_report
         facilities.append(format_facility(doc, distance_meters=doc.get("distance")))
         
+    # Sort by ML Recommendation Score (descending)
+    facilities.sort(key=lambda x: x.get("recommendationScore", 0.0), reverse=True)
+        
     return {"data": facilities}
 
 @router.get("/search", response_model=FacilityListResponse)
@@ -174,3 +200,84 @@ async def get_facility(facility_id: str):
         doc["recentReport"] = recent_report
         
     return format_facility(doc)
+
+import math
+
+def point_to_segment_distance_meters(px, py, ax, ay, bx, by):
+    # Rough approximation: 1 degree latitude = 111,320 meters
+    # 1 degree longitude = 111,320 * cos(latitude) meters
+    lat_mid = math.radians((ay + by) / 2)
+    m_per_deg_lat = 111320
+    m_per_deg_lng = 111320 * math.cos(lat_mid)
+    
+    # Convert to meters relative to A
+    px_m = (px - ax) * m_per_deg_lng
+    py_m = (py - ay) * m_per_deg_lat
+    bx_m = (bx - ax) * m_per_deg_lng
+    by_m = (by - ay) * m_per_deg_lat
+    
+    # Vector AB
+    ab2 = bx_m * bx_m + by_m * by_m
+    if ab2 == 0:
+        return math.sqrt(px_m * px_m + py_m * py_m)
+        
+    # Project point P onto AB
+    t = (px_m * bx_m + py_m * by_m) / ab2
+    t = max(0, min(1, t))
+    
+    proj_x = t * bx_m
+    proj_y = t * by_m
+    
+    # Distance from P to projection
+    dx = px_m - proj_x
+    dy = py_m - proj_y
+    return math.sqrt(dx * dx + dy * dy)
+
+@router.post("/route", response_model=FacilityListResponse)
+async def search_facilities_along_route(req: RouteSearchRequest):
+    collection = get_collection()
+    
+    match_query = {}
+    if req.type:
+        match_query["type"] = "drinking_water" if req.type == "water" else req.type
+    if req.condition:
+        match_query["condition"] = req.condition
+    if req.availability:
+        match_query["availability"] = req.availability
+    if req.wheelchairAccessible is not None:
+        match_query["accessibility.wheelchairAccessible"] = req.wheelchairAccessible
+        
+    if len(req.path) < 2:
+        raise HTTPException(status_code=400, detail="Path must contain at least 2 points for a route.")
+        
+    # Since dataset is small (~60 items), fetch all matching filters and calculate distance in memory.
+    cursor = collection.find(match_query)
+    
+    facilities = []
+    async for doc in cursor:
+        lat = doc.get("location", {}).get("coordinates", [0, 0])[1]
+        lng = doc.get("location", {}).get("coordinates", [0, 0])[0]
+        
+        # Calculate min distance to any segment in the path
+        min_dist = float('inf')
+        for i in range(len(req.path) - 1):
+            ax, ay = req.path[i]
+            bx, by = req.path[i+1]
+            dist = point_to_segment_distance_meters(lng, lat, ax, ay, bx, by)
+            if dist < min_dist:
+                min_dist = dist
+                
+        if min_dist <= req.maxDistance:
+            recent_report = await db.client[settings.MONGODB_DATABASE].reports.find_one(
+                {"facilityId": str(doc["_id"])},
+                sort=[("createdAt", -1)]
+            )
+            if recent_report:
+                doc["recentReport"] = recent_report
+                
+            facilities.append(format_facility(doc, distance_meters=min_dist))
+        
+    # Sort by ML Recommendation Score (descending)
+    facilities.sort(key=lambda x: x.get("recommendationScore", 0.0), reverse=True)
+        
+    return {"data": facilities}
