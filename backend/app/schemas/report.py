@@ -7,6 +7,8 @@ class ReportCreate(BaseModel):
     condition: str
     description: Optional[str] = None
     imageUrl: Optional[str] = None
+    userEmail: Optional[str] = None
+    userId: Optional[str] = None
 
 class ReportResponse(BaseModel):
     id: str = Field(alias="_id")
@@ -21,4 +23,6 @@ class ReportResponse(BaseModel):
     localBodyId: str
     department: str
     priority: str
+    userEmail: Optional[str] = None
+    userId: Optional[str] = None
     idempotencyKey: Optional[str] = None

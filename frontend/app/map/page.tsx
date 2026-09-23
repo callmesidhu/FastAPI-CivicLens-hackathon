@@ -55,7 +55,7 @@ export default function MapPage() {
       filters.status === 'all' ? undefined : filters.status,
       undefined, undefined, { latitude: activeLat, longitude: activeLng, permissionGranted: true, permissionDenied: false }, filters.radius, filters.searchQuery
     ),
-    { refreshInterval: 12000 }
+    { revalidateOnFocus: false, revalidateOnReconnect: false }
   );
 
   const allFacilities = useMemo(() => rawFacilities || [], [rawFacilities]);
@@ -77,6 +77,7 @@ export default function MapPage() {
   const toggleHotspots = () => setFilters((prev) => ({ ...prev, hotspotsOnly: !prev.hotspotsOnly }));
 
   const [is3D, setIs3D] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const handleToggle3D = useCallback(() => {
     setIs3D((prev) => !prev);
@@ -174,6 +175,8 @@ export default function MapPage() {
         locating={locating}
         onToggle3D={handleToggle3D}
         is3D={is3D}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
       />
 
       {/* ── Loading toast ── */}
@@ -200,7 +203,7 @@ export default function MapPage() {
         </div>
       )}
 
-      {/* ── BOTTOM OVERLAY: Rapido-style bottom sheet ── */}
+      {/* ── BOTTOM/LEFT OVERLAY: Civic facilities panel (left sidebar on laptop, bottom sheet on mobile) ── */}
       <MapBottomSheet
         facilities={displayedFacilities}
         allFacilities={allFacilities}
@@ -211,6 +214,8 @@ export default function MapPage() {
         onFilterChange={setFilters}
         onFindMe={handleFindMe}
         onGetDirections={handleGetDirections}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
       />
 
       {/* Offline sync widget */}

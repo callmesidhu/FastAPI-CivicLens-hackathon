@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.db.database import connect_to_mongo, close_mongo_connection
-from app.routes import facilities, reports, tickets, uploads
+from app.routes import facilities, reports, tickets, uploads, auth
 from contextlib import asynccontextmanager
 import os
 
@@ -31,6 +31,7 @@ app.add_middleware(
 
 app.mount("/storage", StaticFiles(directory="storage"), name="storage")
 
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(facilities.router, prefix="/api/facilities", tags=["facilities"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
 app.include_router(tickets.router, prefix="/api/tickets", tags=["tickets"])

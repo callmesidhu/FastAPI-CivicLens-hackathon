@@ -1,32 +1,70 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth, UserRole } from '@/lib/authContext';
-import { X, User, ShieldCheck, CheckCircle2, ArrowRight, Building2, MapPin } from 'lucide-react';
+import { X, User, ShieldCheck, ArrowRight, Building2, Mail, Lock, AlertCircle, Ticket, Sparkles } from 'lucide-react';
 
 export default function LoginModal() {
-  const { isLoginModalOpen, closeLoginModal, loginAs } = useAuth();
-  const [selectedRole, setSelectedRole] = useState<UserRole>('citizen');
-  const [customName, setCustomName] = useState('');
+  const router = useRouter();
+  const { isLoginModalOpen, closeLoginModal, login, loginAs } = useAuth();
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isLoginModalOpen) return null;
 
-  const handleLogin = (role: UserRole) => {
-    loginAs(role, customName);
+  const handleEmailPasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      setError('Please provide email and password');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await login(email.trim(), password.trim());
+      closeLoginModal();
+    } catch (err: any) {
+      setError(err.message || 'Invalid email or password');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleQuickLogin = async (role: UserRole) => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await loginAs(role);
+      closeLoginModal();
+    } catch (err: any) {
+      setError(err.message || 'Quick login failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoToFullLoginPage = () => {
+    closeLoginModal();
+    router.push('/login');
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 max-w-lg w-full overflow-hidden flex flex-col">
+      <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 max-w-md w-full overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+        <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/70">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-2xl bg-[#3D1860] text-white flex items-center justify-center shadow-xs">
               <ShieldCheck className="w-5 h-5 text-[#BB99CD]" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-[#3D1860]">CivicLens Authentication</h2>
-              <p className="text-xs text-gray-500">Select a dummy profile to experience role-based civic workflows</p>
+              <h2 className="text-base font-black text-[#3D1860]">CivicLens Sign In</h2>
+              <p className="text-xs text-gray-500">Normal Email &amp; Password DB Auth</p>
             </div>
           </div>
           <button
@@ -38,101 +76,116 @@ export default function LoginModal() {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-5">
-          {/* Role Switcher Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* Citizen Role */}
-            <div
-              onClick={() => setSelectedRole('citizen')}
-              className={`cursor-pointer rounded-2xl border-2 p-4 transition-all flex flex-col justify-between ${
-                selectedRole === 'citizen'
-                  ? 'border-[#3D1860] bg-[#F5EDF7] ring-2 ring-[#BB99CD]/40'
-                  : 'border-gray-200 hover:border-gray-300 bg-white'
-              }`}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#BB99CD]/30 text-[#3D1860] flex items-center justify-center">
-                    <User className="w-5 h-5" />
-                  </div>
-                  {selectedRole === 'citizen' && (
-                    <span className="w-2 h-2 rounded-full bg-[#3D1860]"></span>
-                  )}
-                </div>
-                <h3 className="font-black text-sm text-[#3D1860] mb-0.5">Citizen / Reporter</h3>
-                <p className="text-[11px] text-gray-500 leading-relaxed mb-3">
-                  Report broken amenities, track tickets, and upload resolution feedback.
-                </p>
-              </div>
-
-              <div className="pt-2 border-t border-gray-100/80 text-[10px] text-gray-600">
-                <span className="font-bold text-gray-800">Demo User:</span> Arun Kumar (Ward 14)
-              </div>
+        <div className="p-5 space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3 rounded-xl flex items-start space-x-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+              <span>{error}</span>
             </div>
+          )}
 
-            {/* Admin Role */}
-            <div
-              onClick={() => setSelectedRole('admin')}
-              className={`cursor-pointer rounded-2xl border-2 p-4 transition-all flex flex-col justify-between ${
-                selectedRole === 'admin'
-                  ? 'border-[#643579] bg-[#643579]/10 ring-2 ring-[#BB99CD]/40'
-                  : 'border-gray-200 hover:border-gray-300 bg-white'
-              }`}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#643579]/20 text-[#643579] flex items-center justify-center">
-                    <Building2 className="w-5 h-5" />
-                  </div>
-                  {selectedRole === 'admin' && (
-                    <span className="w-2 h-2 rounded-full bg-[#643579]"></span>
-                  )}
+          {/* Quick Select Buttons */}
+          <div>
+            <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider mb-2 flex items-center gap-1">
+              Select Account (Instant Login)
+            </span>
+            <div className="grid grid-cols-2 gap-2 mt-1">
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('citizen')}
+                className="p-3 rounded-2xl border-2 border-[#3D1860]/30 hover:border-[#3D1860] bg-[#F5EDF7]/70 hover:bg-[#F5EDF7] transition text-left flex flex-col justify-between"
+              >
+                <div className="flex items-center space-x-1.5 mb-1">
+                  <User className="w-3.5 h-3.5 text-[#3D1860]" />
+                  <span className="text-xs font-black text-[#3D1860]">Citizen</span>
                 </div>
-                <h3 className="font-black text-sm text-[#3D1860] mb-0.5">Government Authority</h3>
-                <p className="text-[11px] text-gray-500 leading-relaxed mb-3">
-                  Dispatch field crews, update ticket status, and verify resolution evidence.
-                </p>
-              </div>
+                <p className="text-[10px] font-mono text-gray-600 truncate">user@civiclens.com</p>
+                <span className="text-[9px] text-[#643579] font-semibold mt-1">For Reporting &amp; Tracking</span>
+              </button>
 
-              <div className="pt-2 border-t border-gray-100/80 text-[10px] text-gray-600">
-                <span className="font-bold text-gray-800">Demo Official:</span> Kochi Municipal Corp
-              </div>
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('admin')}
+                className="p-3 rounded-2xl border-2 border-[#643579]/30 hover:border-[#643579] bg-[#643579]/10 hover:bg-[#643579]/20 transition text-left flex flex-col justify-between"
+              >
+                <div className="flex items-center space-x-1.5 mb-1">
+                  <Building2 className="w-3.5 h-3.5 text-[#643579]" />
+                  <span className="text-xs font-black text-[#643579]">Admin</span>
+                </div>
+                <p className="text-[10px] font-mono text-gray-600 truncate">admin@civiclens.com</p>
+                <span className="text-[9px] text-[#643579] font-semibold mt-1">Municipal Authority</span>
+              </button>
             </div>
           </div>
 
-          {/* Optional Name Override */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">
-              Custom Name (Optional)
-            </label>
-            <input
-              type="text"
-              placeholder={selectedRole === 'citizen' ? 'e.g. Arun Kumar' : 'e.g. Ward 14 Sanitation Inspector'}
-              value={customName}
-              onChange={(e) => setCustomName(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 outline-none focus:border-[#643579] focus:bg-white transition"
-            />
+          <div className="relative my-2">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-[10px] uppercase font-bold text-gray-400">
+              <span className="bg-white px-2">Or enter credentials</span>
+            </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="space-y-2 pt-2">
+          {/* Email / Password Form */}
+          <form onSubmit={handleEmailPasswordLogin} className="space-y-3">
+            <div>
+              <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="user@civiclens.com"
+                  className="w-full pl-10 pr-3.5 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#643579] focus:bg-white transition"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="password123"
+                  className="w-full pl-10 pr-3.5 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#643579] focus:bg-white transition"
+                />
+              </div>
+            </div>
+
             <button
-              onClick={() => handleLogin(selectedRole)}
-              className={`w-full py-3 px-4 rounded-xl font-bold text-xs text-white shadow-md transition transform active:scale-98 flex items-center justify-center space-x-2 ${
-                selectedRole === 'admin' ? 'bg-[#643579] hover:bg-[#3D1860]' : 'bg-[#3D1860] hover:bg-[#643579]'
-              }`}
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-[#3D1860] hover:bg-[#643579] disabled:opacity-60 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-md flex items-center justify-center space-x-2"
             >
-              <span>Sign In as {selectedRole === 'citizen' ? 'Citizen Reporter' : 'Government Authority (Admin)'}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              {isSubmitting ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </>
+              )}
             </button>
+          </form>
 
+          {/* Full Page Link */}
+          <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
             <button
-              onClick={() => {
-                loginAs(selectedRole === 'citizen' ? 'admin' : 'citizen');
-              }}
-              className="w-full py-2.5 px-4 rounded-xl font-semibold text-xs text-gray-600 hover:bg-gray-100 transition flex items-center justify-center"
+              type="button"
+              onClick={handleGoToFullLoginPage}
+              className="text-xs text-[#643579] hover:text-[#3D1860] font-bold flex items-center space-x-1.5 transition"
             >
-              Quick switch &amp; sign in as {selectedRole === 'citizen' ? 'Admin' : 'Citizen'}
+              <Ticket className="w-3.5 h-3.5" />
+              <span>Open Full Account &amp; Ticket Tracking Page</span>
             </button>
           </div>
         </div>

@@ -32,6 +32,13 @@ async def create_report(
 ):
     database = get_db()
     
+    # User must be logged in to report a problem
+    if not report.userEmail:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required: You must be logged in to report a problem."
+        )
+    
     # 0. Idempotency Check
     if x_idempotency_key:
         existing_report = await database.reports.find_one({"idempotencyKey": x_idempotency_key})
@@ -39,15 +46,22 @@ async def create_report(
             # Report already exists, just fetch the ticket and return it
             ticket = await database.tickets.find_one({"reportId": str(existing_report["_id"])})
             if ticket:
+                if report.userEmail and not ticket.get("userEmail"):
+                    await database.tickets.update_one(
+                        {"_id": ticket["_id"]},
+                        {"$set": {"userEmail": report.userEmail.strip().lower()}}
+                    )
                 return TicketCreationResponse(
                     reportId=str(existing_report["_id"]),
                     ticketNumber=ticket["ticketNumber"],
                     status=ticket["status"],
                     priority=ticket["priority"],
                     imageUrl=ticket.get("imageUrl"),
-                    localBody=ticket["localBodyId"], # Simplified for duplicate return
-                    department=ticket["department"],
-                    expectedResponse=ticket["expectedResponse"]
+                    localBody=ticket.get("localBodyId", "Municipal Body"),
+                    department=ticket.get("department", "Public Works"),
+                    expectedResponse=ticket.get("expectedResponse", "Within 24 hours"),
+                    userEmail=ticket.get("userEmail") or (report.userEmail.strip().lower() if report.userEmail else None),
+                    userId=ticket.get("userId")
                 )
 
     # 1. Validate facility exists
@@ -72,15 +86,22 @@ async def create_report(
         # If it's a duplicate, just return the existing ticket details
         ticket = await database.tickets.find_one({"reportId": str(recent_duplicate["_id"])})
         if ticket:
+            if report.userEmail and not ticket.get("userEmail"):
+                await database.tickets.update_one(
+                    {"_id": ticket["_id"]},
+                    {"$set": {"userEmail": report.userEmail.strip().lower()}}
+                )
             return TicketCreationResponse(
                 reportId=str(recent_duplicate["_id"]),
                 ticketNumber=ticket["ticketNumber"],
                 status=ticket["status"],
                 priority=ticket["priority"],
                 imageUrl=ticket.get("imageUrl"),
-                localBody=ticket["localBodyId"], # Simplified for duplicate return
-                department=ticket["department"],
-                expectedResponse=ticket["expectedResponse"]
+                localBody=ticket.get("localBodyId", "Municipal Body"),
+                department=ticket.get("department", "Public Works"),
+                expectedResponse=ticket.get("expectedResponse", "Within 24 hours"),
+                userEmail=ticket.get("userEmail") or (report.userEmail.strip().lower() if report.userEmail else None),
+                userId=ticket.get("userId")
             )
 
     # 3. Routing (Find Local Body and Department)
@@ -119,7 +140,9 @@ async def create_report(
         "imageUrl": report.imageUrl,
         "createdAt": now_iso,
         "status": "submitted",
-        "anonymous": True,
+        "anonymous": report.userEmail is None,
+        "userEmail": report.userEmail.strip().lower() if report.userEmail else None,
+        "userId": report.userId,
         "ticketId": "", # Will update after ticket creation
         "localBodyId": str(local_body_id),
         "department": department_name,
@@ -141,6 +164,8 @@ async def create_report(
         "priority": priority,
         "status": "submitted",
         "imageUrl": report.imageUrl,
+        "userEmail": report.userEmail.strip().lower() if report.userEmail else None,
+        "userId": report.userId,
         "createdAt": now_iso,
         "expectedResponse": f"Within {local_body.get('responseTimeHours', 24)} hours",
         "updatedAt": now_iso
@@ -163,7 +188,9 @@ async def create_report(
         imageUrl=ticket_doc.get("imageUrl"),
         localBody=local_body.get("name", "Unknown"),
         department=department_name,
-        expectedResponse=ticket_doc["expectedResponse"]
+        expectedResponse=ticket_doc["expectedResponse"],
+        userEmail=ticket_doc.get("userEmail"),
+        userId=ticket_doc.get("userId")
     )
 
 @router.get("/{report_id}", response_model=ReportResponse)

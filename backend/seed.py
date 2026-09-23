@@ -828,6 +828,30 @@ async def seed_database():
     await database.tickets.insert_one(sample_ticket)
     print("Inserted sample civic report and ticket.")
     
+    # Clear and insert default users
+    await database.users.delete_many({})
+    await database.users.insert_many([
+        {
+            "email": "user@civiclens.com",
+            "password": "password123",
+            "name": "Citizen Reporter",
+            "role": "citizen",
+            "title": "Active Citizen Reporter",
+            "ward": "Ward 14 (Fort Kochi)",
+            "department": None
+        },
+        {
+            "email": "admin@civiclens.com",
+            "password": "admin123",
+            "name": "Kochi Municipal Authority",
+            "role": "admin",
+            "title": "Municipal Sanitation Inspector",
+            "ward": "Wards 1-25 (Central Zone)",
+            "department": "Health & Municipal Sanitation Dept"
+        }
+    ])
+    print("Inserted seed users (user@civiclens.com, admin@civiclens.com).")
+    
     await close_mongo_connection()
     print("Closed MongoDB connection.")
 

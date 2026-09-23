@@ -105,7 +105,13 @@ export async function uploadImage(file: File | Blob, filename: string = "image.j
   return data.imageUrl;
 }
 
-export async function submitReport(facilityId: string, condition: string, description?: string, imageUrl?: string) {
+export async function submitReport(
+  facilityId: string,
+  condition: string,
+  description?: string,
+  imageUrl?: string,
+  userEmail?: string
+) {
   const isOnline = typeof window !== 'undefined' && navigator.onLine;
   const idempotencyKey = uuidv4();
   
@@ -118,6 +124,7 @@ export async function submitReport(facilityId: string, condition: string, descri
       condition,
       description,
       imageUrl,
+      userEmail,
       createdAt: new Date().toISOString(),
       status: 'pending' as const,
       idempotencyKey,
@@ -133,18 +140,19 @@ export async function submitReport(facilityId: string, condition: string, descri
       priority: 'calculated on sync',
       localBody: 'Pending Sync',
       department: 'Pending Sync',
-      expectedResponse: 'When online'
+      expectedResponse: 'When online',
+      userEmail
     };
   }
 
-  const url = `${process.env.NEXT_PUBLIC_API_URL}/reports`;
+  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/reports`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
       'X-Idempotency-Key': idempotencyKey
     },
-    body: JSON.stringify({ facilityId, condition, description, imageUrl })
+    body: JSON.stringify({ facilityId, condition, description, imageUrl, userEmail })
   });
   
   if (!res.ok) {
@@ -165,7 +173,7 @@ export async function fetchTicket(ticketNumber: string) {
     throw new Error('Ticket not found in local cache');
   }
 
-  const url = `${process.env.NEXT_PUBLIC_API_URL}/tickets/${ticketNumber}`;
+  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/tickets/${ticketNumber}`;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) {
     throw new Error('Failed to fetch ticket');
@@ -174,3 +182,118 @@ export async function fetchTicket(ticketNumber: string) {
   await cacheTicket(data);
   return data;
 }
+
+export async function loginUser(email: string, password: string) {
+  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/auth/login`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Invalid email or password');
+  }
+
+  return await res.json();
+}
+
+export async function registerUser(email: string, password: string, name: string, role: string = 'citizen', ward?: string, department?: string) {
+  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/auth/register`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, name, role, ward, department })
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Registration failed');
+  }
+
+  return await res.json();
+}
+
+export async function fetchUserTickets(userEmail?: string, ticketNumbers?: string[]) {
+  const baseUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/tickets/`;
+  const params = new URLSearchParams();
+  if (userEmail) params.append('userEmail', userEmail);
+  if (ticketNumbers && ticketNumbers.length > 0) {
+    params.append('ticketNumbers', ticketNumbers.join(','));
+  }
+
+  const queryString = params.toString();
+  const url = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error('Failed to fetch tickets');
+  }
+  return await res.json();
+}
+
+export async function fetchAllTickets(status?: string) {
+  const baseUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/tickets/`;
+  const url = status && status !== 'all' ? `${baseUrl}?status=${encodeURIComponent(status)}` : baseUrl;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error('Failed to fetch all tickets');
+  }
+  return await res.json();
+}
+
+export async function claimTicket(ticketNumber: string, userEmail: string) {
+  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/tickets/${ticketNumber}/claim`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userEmail })
+  });
+  if (!res.ok) {
+    throw new Error('Failed to claim ticket');
+  }
+  return await res.json();
+}
+
+export async function updateTicketStatus(
+  ticketNumber: string,
+  status: string,
+  resolutionNotes?: string,
+  resolvedImageUrl?: string,
+  officerName?: string,
+  department?: string,
+  resolvedBy?: string
+) {
+  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/tickets/${ticketNumber}/status`;
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      status,
+      resolutionNotes,
+      resolvedImageUrl,
+      officerName,
+      department,
+      resolvedBy: resolvedBy || 'admin@civiclens.com',
+    }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Failed to update ticket status');
+  }
+
+  const data = await res.json();
+  await cacheTicket(data);
+  return data;
+}
+
+export function getFullImageUrl(url?: string | null): string {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+  const hostBase = apiBase.replace(/\/api\/?$/, '');
+  return `${hostBase}${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
+

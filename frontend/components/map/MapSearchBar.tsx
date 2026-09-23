@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Search, Droplet, Users, X, Navigation, Box } from 'lucide-react';
+import { ArrowLeft, Search, Droplet, Users, X, Navigation, Box, Building2, ChevronRight } from 'lucide-react';
 import { DashboardFilterState } from '@/components/facilities/CivicDashboardCard';
 
 interface MapSearchBarProps {
@@ -14,6 +14,8 @@ interface MapSearchBarProps {
   locating?: boolean;
   onToggle3D?: () => void;
   is3D?: boolean;
+  isSidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export default function MapSearchBar({
@@ -25,9 +27,15 @@ export default function MapSearchBar({
   locating = false,
   onToggle3D,
   is3D = false,
+  isSidebarCollapsed = false,
+  onToggleSidebar,
 }: MapSearchBarProps) {
   return (
-    <div className="absolute top-0 left-0 right-0 z-40 px-3 pt-3 pb-2 pointer-events-none">
+    <div
+      className={`absolute top-0 left-0 right-0 z-40 px-3 pt-3 pb-2 pointer-events-none transition-all duration-300 ease-in-out ${
+        isSidebarCollapsed ? 'md:left-0' : 'md:left-[390px] lg:left-[416px]'
+      }`}
+    >
       <div className="pointer-events-auto flex flex-col gap-2">
         {/* Main pill bar */}
         <div className="flex items-center gap-2 bg-white/97 backdrop-blur-md rounded-2xl shadow-xl border border-gray-100 px-3 py-2.5">
@@ -35,9 +43,24 @@ export default function MapSearchBar({
           <Link
             href="/"
             className="flex items-center justify-center w-8 h-8 rounded-xl bg-gray-100 hover:bg-[#F5EDF7] text-gray-700 hover:text-[#3D1860] transition shrink-0"
+            title="Back to Home"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
+
+          {/* When sidebar is collapsed on laptop, show inline Facilities button */}
+          {isSidebarCollapsed && onToggleSidebar && (
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F5EDF7] hover:bg-[#BB99CD]/30 text-[#3D1860] border border-[#BB99CD]/40 text-xs font-bold transition shrink-0 cursor-pointer shadow-2xs"
+              title="Open Civic Facilities Sidebar"
+            >
+              <Building2 className="w-3.5 h-3.5 text-[#643579]" />
+              <span>{totalCount} Facilities</span>
+              <ChevronRight className="w-3 h-3 text-[#643579]" />
+            </button>
+          )}
 
           <div className="w-px h-6 bg-gray-200 shrink-0" />
 
@@ -54,7 +77,7 @@ export default function MapSearchBar({
             {filters.searchQuery && (
               <button
                 onClick={() => onFilterChange({ ...filters, searchQuery: '' })}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>

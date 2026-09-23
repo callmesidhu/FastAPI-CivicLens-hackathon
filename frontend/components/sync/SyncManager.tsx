@@ -17,9 +17,7 @@ export default function SyncManager() {
 
   useEffect(() => {
     checkPending();
-    const interval = setInterval(checkPending, 5000);
-    return () => clearInterval(interval);
-  }, [checkPending]);
+  }, [checkPending, isOnline]);
 
   const syncNow = async () => {
     if (!isOnline || isSyncing) return;

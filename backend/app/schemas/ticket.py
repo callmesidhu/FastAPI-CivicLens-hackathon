@@ -4,17 +4,18 @@ from typing import Optional
 class TicketResponse(BaseModel):
     id: str = Field(alias="_id")
     ticketNumber: str
-    reportId: str
-    facilityId: str
-    localBodyId: str
-    department: str
-    issueType: str
-    priority: str
+    reportId: Optional[str] = None
+    facilityId: Optional[str] = None
+    localBodyId: Optional[str] = None
+    department: Optional[str] = "Municipal Works"
+    issueType: Optional[str] = "Maintenance"
+    priority: Optional[str] = "medium"
     status: str
     imageUrl: Optional[str] = None
-    createdAt: str
-    expectedResponse: str
-    updatedAt: str
+    createdAt: Optional[str] = None
+    expectedResponse: Optional[str] = "Within 24 hours"
+    updatedAt: Optional[str] = None
+    resolvedAt: Optional[str] = None
     
     # These fields are enriched when returning to the client
     facilityName: Optional[str] = None
@@ -22,6 +23,10 @@ class TicketResponse(BaseModel):
     localBodyWard: Optional[str] = None
     resolutionNotes: Optional[str] = None
     resolvedImageUrl: Optional[str] = None
+    resolvedBy: Optional[str] = None
+    resolvedByName: Optional[str] = None
+    userEmail: Optional[str] = None
+    userId: Optional[str] = None
 
 class TicketCreationResponse(BaseModel):
     reportId: str
@@ -32,3 +37,5 @@ class TicketCreationResponse(BaseModel):
     localBody: str
     department: str
     expectedResponse: str
+    userEmail: Optional[str] = None
+    userId: Optional[str] = None
