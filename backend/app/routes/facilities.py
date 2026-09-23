@@ -63,7 +63,7 @@ async def get_facilities(
     query = {}
     
     if type:
-        query["type"] = type
+        query["type"] = "drinking_water" if type == "water" else type
     if condition:
         query["condition"] = condition
     if availability:
@@ -99,7 +99,7 @@ async def get_nearby_facilities(
     
     match_query = {}
     if type:
-        match_query["type"] = type
+        match_query["type"] = "drinking_water" if type == "water" else type
     if condition:
         match_query["condition"] = condition
     if availability:
