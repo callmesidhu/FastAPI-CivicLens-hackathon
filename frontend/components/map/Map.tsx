@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import * as maplibregl from 'maplibre-gl';
-import Map, { Marker, NavigationControl, GeolocateControl, MapRef } from 'react-map-gl/maplibre';
+import Map, { Marker, NavigationControl, GeolocateControl, MapRef, Source, Layer } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Facility } from '@/types';
-import { Droplet, MapPin, LocateFixed, Navigation, AlertTriangle, AlertCircle, X, Flame, Users, Satellite, Map as MapIcon } from 'lucide-react';
+import { Droplet, MapPin, LocateFixed, AlertCircle, X, Flame, Users, Satellite, Map as MapIcon } from 'lucide-react';
 
 interface CivicMapProps {
   facilities: Facility[];
@@ -15,6 +15,12 @@ interface CivicMapProps {
   locationDenied?: boolean;
   onRequestLocation?: () => void;
   showHotspots?: boolean;
+  radius?: number; // metres — drives auto-zoom + circle
+}
+
+export interface CivicMapHandle {
+  findMe: () => void;
+  isLocating: boolean;
 }
 
 // Fix for Turbopack worker issue
@@ -48,7 +54,54 @@ const SATELLITE_STYLE: any = {
 
 const STREET_STYLE = process.env.NEXT_PUBLIC_MAP_STYLE_URL || 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 
-export default function CivicMap({
+/** Map radius → zoom level so the full circle fits the viewport */
+function radiusToZoom(metres: number): number {
+  if (metres <= 1000)  return 13;
+  if (metres <= 5000)  return 11;
+  if (metres <= 10000) return 10;
+  return 8; // 50 km
+}
+
+/**
+ * Build a GeoJSON polygon that approximates a circle.
+ * @param lng  centre longitude
+ * @param lat  centre latitude
+ * @param radiusM  radius in metres
+ * @param steps  number of polygon vertices (more = smoother)
+ */
+function generateCircleGeoJSON(
+  lng: number, lat: number, radiusM: number, steps = 64
+): GeoJSON.Feature<GeoJSON.Polygon> {
+  const coords: [number, number][] = [];
+  const earthRadius = 6371000; // metres
+  const angularDist = radiusM / earthRadius;
+  const latRad = (lat * Math.PI) / 180;
+  const lngRad = (lng * Math.PI) / 180;
+
+  for (let i = 0; i <= steps; i++) {
+    const bearing = (2 * Math.PI * i) / steps;
+    const pLat = Math.asin(
+      Math.sin(latRad) * Math.cos(angularDist) +
+      Math.cos(latRad) * Math.sin(angularDist) * Math.cos(bearing)
+    );
+    const pLng = lngRad + Math.atan2(
+      Math.sin(bearing) * Math.sin(angularDist) * Math.cos(latRad),
+      Math.cos(angularDist) - Math.sin(latRad) * Math.sin(pLat)
+    );
+    coords.push([
+      (pLng * 180) / Math.PI,
+      (pLat * 180) / Math.PI,
+    ]);
+  }
+
+  return {
+    type: 'Feature',
+    geometry: { type: 'Polygon', coordinates: [coords] },
+    properties: {},
+  };
+}
+
+const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
   facilities,
   onSelectFacility,
   selectedFacility,
@@ -56,34 +109,65 @@ export default function CivicMap({
   locationDenied,
   onRequestLocation,
   showHotspots = true,
-}: CivicMapProps) {
+  radius,
+}, ref) {
   const mapRef = useRef<MapRef>(null);
   const [mapMode, setMapMode] = useState<'satellite' | 'street'>('satellite');
   const [dismissAlert, setDismissAlert] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   const [viewState, setViewState] = useState({
-    longitude: userLocation?.lng || 76.2673, // Default around Kochi / Kerala
-    latitude: userLocation?.lat || 9.9312,
-    zoom: 13
+    longitude: userLocation?.lng || 76.3656, // Default around Jain University, Kakkanad, Kochi
+    latitude: userLocation?.lat || 10.0070,
+    zoom: radius ? radiusToZoom(radius) : 14
   });
 
-  // Recentering logic
-  const handleRecenter = () => {
-    if (onRequestLocation && !userLocation) {
-      onRequestLocation();
+  // Auto-zoom when the radius filter changes
+  useEffect(() => {
+    if (radius == null) return;
+    const zoom = radiusToZoom(radius);
+    const lng = userLocation?.lng || 76.3656;
+    const lat = userLocation?.lat || 10.0070;
+    if (mapRef.current) {
+      mapRef.current.flyTo({ center: [lng, lat], zoom, duration: 900, essential: true });
+    } else {
+      setViewState((prev) => ({ ...prev, longitude: lng, latitude: lat, zoom }));
     }
-    if (userLocation && mapRef.current) {
+  }, [radius]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fly to user — called both on button click and when location resolves
+  const flyToUser = useCallback((loc: { lat: number; lng: number }) => {
+    if (mapRef.current) {
       mapRef.current.flyTo({
-        center: [userLocation.lng, userLocation.lat],
-        zoom: 15,
-        duration: 1000
+        center: [loc.lng, loc.lat],
+        zoom: 16,
+        duration: 1200,
+        essential: true,
       });
     }
-  };
+    setLocating(false);
+  }, []);
 
+  // "Find Me" button handler
+  const handleFindMe = useCallback(() => {
+    if (userLocation) {
+      flyToUser(userLocation);
+    } else {
+      setLocating(true);
+      onRequestLocation?.();
+    }
+  }, [userLocation, flyToUser, onRequestLocation]);
+
+  // Expose findMe() and isLocating to parent via ref
+  useImperativeHandle(ref, () => ({
+    findMe: handleFindMe,
+    isLocating: locating,
+  }), [handleFindMe, locating]);
+
+  // When location resolves (after requesting), fly there
   useEffect(() => {
     if (userLocation) {
-      handleRecenter();
+      flyToUser(userLocation);
     }
   }, [userLocation]);
 
@@ -98,34 +182,20 @@ export default function CivicMap({
     }
   }, [selectedFacility]);
 
-  // Marker colors
-  const getMarkerColor = (condition: string) => {
+  // Marker condition dot
+  const getConditionDot = (condition: string) => {
     switch (condition) {
       case 'clean':
       case 'usable':
-        return 'text-emerald-600';
+        return 'bg-emerald-500';
       case 'broken':
-        return 'text-red-600';
+        return 'bg-red-500';
       case 'locked':
+        return 'bg-amber-500';
       case 'no_water':
-        return 'text-amber-500';
+        return 'bg-orange-500';
       default:
-        return 'text-gray-500';
-    }
-  };
-
-  const getMarkerBg = (condition: string) => {
-    switch (condition) {
-      case 'clean':
-      case 'usable':
-        return 'bg-emerald-50 border-emerald-400';
-      case 'broken':
-        return 'bg-red-50 border-red-500';
-      case 'locked':
-      case 'no_water':
-        return 'bg-amber-50 border-amber-400';
-      default:
-        return 'bg-gray-100 border-gray-300';
+        return 'bg-gray-400';
     }
   };
 
@@ -149,20 +219,6 @@ export default function CivicMap({
         <NavigationControl position="bottom-right" />
         <GeolocateControl position="bottom-right" />
 
-        {/* User Location Pulse Marker */}
-        {userLocation && (
-          <Marker
-            longitude={userLocation.lng}
-            latitude={userLocation.lat}
-            anchor="center"
-          >
-            <div className="relative flex items-center justify-center">
-              <div className="absolute w-8 h-8 bg-[#643579] rounded-full animate-ping opacity-75"></div>
-              <div className="relative w-4 h-4 bg-white border-4 border-[#3D1860] rounded-full shadow-xl"></div>
-            </div>
-          </Marker>
-        )}
-
         {/* Facility Markers */}
         {facilities.map((facility) => {
           const isSelected = selectedFacility?.id === facility.id;
@@ -185,32 +241,86 @@ export default function CivicMap({
                   <div className="absolute -inset-2 bg-red-500/25 rounded-full animate-pulse blur-xs" />
                 )}
 
-                {/* Marker Body */}
+                {/* Marker Body — Theme Squircle Badge */}
                 <div 
                   className={`
-                    relative p-2 rounded-full border-2 transition-all shadow-lg
-                    ${getMarkerBg(facility.condition)}
-                    ${isSelected ? 'scale-125 ring-4 ring-[#BB99CD] ring-opacity-90 z-50 shadow-2xl' : 'hover:scale-115'}
+                    relative p-2 rounded-2xl bg-[#F5EDF7] border-2 border-[#BB99CD] transition-all shadow-md flex items-center justify-center
+                    ${isSelected ? 'scale-125 ring-4 ring-[#643579]/40 z-50 shadow-2xl' : 'hover:scale-115'}
                   `}
                   title={facility.name}
                 >
+                  {/* Status Indicator Dot */}
+                  <span className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full ring-2 ring-white ${getConditionDot(facility.condition)}`} />
+
                   {facility.type === 'toilet' ? (
-                    <Users className={`w-4 h-4 sm:w-5 sm:h-5 ${getMarkerColor(facility.condition)}`} />
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-[#3D1860]" />
                   ) : (
-                    <Droplet className={`w-4 h-4 sm:w-5 sm:h-5 ${getMarkerColor(facility.condition)} fill-current`} />
+                    <Droplet className="w-4 h-4 sm:w-5 sm:h-5 text-[#3D1860] fill-[#643579]/20" />
                   )}
                 </div>
 
                 {/* Tiny Pin Pointer Stem */}
-                <div className="w-1.5 h-1.5 bg-gray-700 rotate-45 -mt-1 rounded-2xs" />
+                <div className="w-2 h-2 bg-[#BB99CD] rotate-45 -mt-1 rounded-2xs shadow-2xs" />
               </div>
             </Marker>
           );
         })}
+
+        {/* Radius circle layer */}
+        {radius && (() => {
+          const lng = userLocation?.lng || 76.3656;
+          const lat = userLocation?.lat || 10.0070;
+          const circleData = generateCircleGeoJSON(lng, lat, radius);
+          return (
+            <Source id="radius-circle" type="geojson" data={circleData}>
+              {/* Translucent fill */}
+              <Layer
+                id="radius-fill"
+                type="fill"
+                paint={{
+                  'fill-color': '#643579',
+                  'fill-opacity': 0.07,
+                }}
+              />
+              {/* Dashed outline stroke */}
+              <Layer
+                id="radius-outline"
+                type="line"
+                paint={{
+                  'line-color': '#643579',
+                  'line-width': 2,
+                  'line-opacity': 0.6,
+                  'line-dasharray': [4, 3],
+                }}
+              />
+            </Source>
+          );
+        })()}
+
+        {/* User Location Marker — Rendered AFTER facility markers with top z-index, zero pulsing */}
+        {userLocation && (
+          <Marker
+            longitude={userLocation.lng}
+            latitude={userLocation.lat}
+            anchor="center"
+            style={{ zIndex: 9999 }}
+          >
+            <div
+              className="relative flex items-center justify-center z-[9999] cursor-pointer"
+              title="My Location"
+            >
+              <div className="w-7 h-7 rounded-full bg-[#643579]/25 border-2 border-white shadow-xl flex items-center justify-center">
+                <div className="w-4 h-4 rounded-full bg-[#3D1860] border-2 border-white shadow-md flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                </div>
+              </div>
+            </div>
+          </Marker>
+        )}
       </Map>
 
-      {/* Top-Right Map Controls: Satellite/Street Switcher & Use My Location */}
-      <div className="absolute top-4 right-4 z-20 flex flex-col items-end space-y-2">
+      {/* Top-Right Map Controls: Satellite/Street Switcher */}
+      <div className="absolute top-4 right-4 z-20">
         {/* View Toggle */}
         <div className="bg-white/95 backdrop-blur-xs p-1 rounded-full shadow-xl border border-[#BB99CD]/40 flex items-center space-x-1">
           <button
@@ -236,15 +346,6 @@ export default function CivicMap({
             <span>Street</span>
           </button>
         </div>
-
-        {/* Use My Location Button */}
-        <button
-          onClick={handleRecenter}
-          className="flex items-center space-x-1.5 bg-white/95 backdrop-blur-xs hover:bg-[#F5EDF7] text-[#3D1860] border border-[#BB99CD]/50 shadow-lg px-4 py-2 rounded-full text-xs font-bold transition transform active:scale-95"
-        >
-          <Navigation className="w-3.5 h-3.5 fill-[#643579] text-[#643579]" />
-          <span>Use My Location</span>
-        </button>
       </div>
 
       {/* Top-Left Location Denied / Status Notification */}
@@ -267,4 +368,6 @@ export default function CivicMap({
       )}
     </div>
   );
-}
+});
+
+export default CivicMap;
