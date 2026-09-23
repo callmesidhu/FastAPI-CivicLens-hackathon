@@ -32,7 +32,8 @@ export async function fetchFacilities(
       );
     }
     if (type && type !== 'all') {
-      facilities = facilities.filter(f => f.type === type);
+      const targetType = type === 'water' ? 'drinking_water' : type;
+      facilities = facilities.filter(f => f.type === targetType || (targetType === 'drinking_water' && (f.type as string) === 'water'));
     }
     if (condition && condition !== 'all') {
       facilities = facilities.filter(f => f.condition === condition);
@@ -49,18 +50,24 @@ export async function fetchFacilities(
 
   let url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/facilities`);
   
+  const userLat = location?.latitude ?? 10.0070408;
+  const userLng = location?.longitude ?? 76.3656069;
+
   if (searchQuery) {
     url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/facilities/search`);
     url.searchParams.append('q', searchQuery);
-  } else if (location && location.latitude && location.longitude) {
+  } else if (userLat && userLng) {
     url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/facilities/nearby`);
-    url.searchParams.append('lat', location.latitude.toString());
-    url.searchParams.append('lng', location.longitude.toString());
+    url.searchParams.append('lat', userLat.toString());
+    url.searchParams.append('lng', userLng.toString());
     if (radius) url.searchParams.append('radius', radius.toString());
   }
   
   if (!searchQuery) {
-    if (type && type !== 'all') url.searchParams.append('type', type);
+    if (type && type !== 'all') {
+      const queryType = type === 'water' ? 'drinking_water' : type;
+      url.searchParams.append('type', queryType);
+    }
     if (condition && condition !== 'all') url.searchParams.append('condition', condition);
     if (availability && availability !== 'all') url.searchParams.append('availability', availability);
     if (wheelchairAccessible) url.searchParams.append('wheelchairAccessible', 'true');

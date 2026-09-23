@@ -37,5 +37,11 @@ export function useLocation() {
     );
   };
 
+  // Auto-fetch location when the hook first mounts (i.e. on /map load)
+  useEffect(() => {
+    requestLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return { location, requestLocation, isRequesting };
 }
