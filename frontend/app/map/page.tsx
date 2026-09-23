@@ -157,6 +157,7 @@ export default function MapPage() {
           selectedFacility={selectedFacility}
           onSelectFacility={setSelectedFacility}
           userLocation={memoUserLocation}
+          locationAccuracy={location.accuracy}
           locationDenied={location.permissionDenied}
           onRequestLocation={requestLocation}
           showHotspots={filters.hotspotsOnly}

@@ -1,10 +1,10 @@
-// CivicLens Service Worker v2
+// CivicLens Service Worker v3
 // Strategy: Network-first for API calls, Cache-first for static assets, Stale-while-revalidate for pages
 
-const CACHE_NAME = 'civiclens-v2';
-const RUNTIME_CACHE = 'civiclens-runtime-v2';
-const MAP_TILE_CACHE = 'civiclens-tiles-v2';
-const API_CACHE = 'civiclens-api-v2';          // Dedicated cache for facility/ticket API responses
+const CACHE_NAME = 'civiclens-v3';
+const RUNTIME_CACHE = 'civiclens-runtime-v3';
+const MAP_TILE_CACHE = 'civiclens-tiles-v3';
+const API_CACHE = 'civiclens-api-v3';          // Dedicated cache for facility/ticket API responses
 
 // Static shell assets to precache on install
 const PRECACHE_URLS = [
@@ -80,7 +80,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ── Next.js static assets → Cache-first (immutable hashed filenames) ──
+  // ── Next.js JS chunks → Network-first so code updates are always picked up.
+  //    Only fall back to cache when offline. Hashed filenames ensure immutability
+  //    for truly static assets, but we must not cache-first during active dev.
+  if (url.pathname.startsWith('/_next/static/chunks/')) {
+    event.respondWith(networkFirst(request, CACHE_NAME));
+    return;
+  }
+
+  // ── Other Next.js static assets (CSS, fonts, images) → Cache-first ──
   if (url.pathname.startsWith('/_next/static/')) {
     event.respondWith(cacheFirst(request, CACHE_NAME));
     return;

@@ -19,6 +19,7 @@ interface CivicMapProps {
   onSelectFacility: (facility: Facility | null) => void;
   selectedFacility: Facility | null;
   userLocation?: { lat: number; lng: number };
+  locationAccuracy?: number | null; // GPS accuracy in metres — drives the accuracy ring
   locationDenied?: boolean;
   onRequestLocation?: () => void;
   showHotspots?: boolean;
@@ -67,10 +68,10 @@ const STREET_STYLE = process.env.NEXT_PUBLIC_MAP_STYLE_URL || 'https://basemaps.
 
 /** Map radius → zoom level so the full circle fits the viewport */
 function radiusToZoom(metres: number): number {
-  if (metres <= 1000)  return 13;
-  if (metres <= 5000)  return 11;
-  if (metres <= 10000) return 10;
-  return 8; // 50 km
+  if (metres <= 1000)  return 17;
+  if (metres <= 5000)  return 16.2;
+  if (metres <= 10000) return 15.6;
+  return 14; // 50 km
 }
 
 /**
@@ -117,6 +118,7 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
   onSelectFacility,
   selectedFacility,
   userLocation,
+  locationAccuracy,
   locationDenied,
   onRequestLocation,
   showHotspots = true,
@@ -227,11 +229,33 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
     }
   }, [selectedFacility, is3D]);
 
+  // Auto-resize the MapLibre canvas whenever the container element changes size
+  // (e.g. bottom sheet opens/closes, sidebar expands). Without this the tile
+  // canvas stays the wrong dimensions and leaves a grey strip.
+  useEffect(() => {
+    const container = mapRef.current?.getContainer();
+    if (!container) return;
+
+    const observer = new ResizeObserver(() => {
+      mapRef.current?.resize();
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []); // run once after mount — the ref value is stable
+
   // Memoized GeoJSON for Radius Circle (prevents layer rebuilding on every frame)
   const radiusCircleGeoJSON = useMemo(() => {
     if (!radius || !userLocation) return null;
     return generateCircleGeoJSON(userLocation.lng, userLocation.lat, radius);
   }, [radius, userLocation?.lat, userLocation?.lng]);
+
+  // Memoized GeoJSON for GPS Accuracy Ring (visualises device GPS precision)
+  const accuracyRingGeoJSON = useMemo(() => {
+    if (!locationAccuracy || locationAccuracy <= 0 || !userLocation) return null;
+    // Only show the ring when accuracy > 5 m (below that it's negligibly small)
+    if (locationAccuracy < 5) return null;
+    return generateCircleGeoJSON(userLocation.lng, userLocation.lat, locationAccuracy);
+  }, [locationAccuracy, userLocation?.lat, userLocation?.lng]);
 
   // Memoized GeoJSON for Active Navigation Route (prevents route line flicker)
   const activeRouteGeoJSON = useMemo(() => {
@@ -348,6 +372,30 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
             </Marker>
           );
         })}
+
+        {/* GPS Accuracy Ring (soft blue halo scaled to real-world GPS accuracy) */}
+        {accuracyRingGeoJSON && (
+          <Source id="accuracy-ring" type="geojson" data={accuracyRingGeoJSON}>
+            <Layer
+              id="accuracy-ring-fill"
+              type="fill"
+              paint={{
+                'fill-color': '#3b82f6',
+                'fill-opacity': 0.08,
+              }}
+            />
+            <Layer
+              id="accuracy-ring-outline"
+              type="line"
+              paint={{
+                'line-color': '#3b82f6',
+                'line-width': 1.5,
+                'line-opacity': 0.35,
+                'line-dasharray': [3, 3],
+              }}
+            />
+          </Source>
+        )}
 
         {/* Radius circle layer (memoized GeoJSON prevents GPU re-buffering flicker) */}
         {radiusCircleGeoJSON && (

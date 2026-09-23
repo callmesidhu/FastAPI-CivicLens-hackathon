@@ -35,13 +35,20 @@ interface CivicLensDB extends DBSchema {
   };
 }
 
-let dbPromise: Promise<IDBPDatabase<CivicLensDB>> | null = null;
+// Use globalThis to survive Turbopack/HMR module reloads.
+// Without this, `dbPromise` resets to null on every hot reload while
+// the old IDB connection is still open, triggering a second version-change
+// transaction that IDB rejects with InvalidStateError.
+declare global {
+  // eslint-disable-next-line no-var
+  var __civiclens_dbPromise: Promise<IDBPDatabase<CivicLensDB>> | undefined;
+}
 
-export async function getDB() {
-  if (typeof window === 'undefined') return null;
+export function getDB(): Promise<IDBPDatabase<CivicLensDB> | null> {
+  if (typeof window === 'undefined') return Promise.resolve(null);
 
-  if (!dbPromise) {
-    dbPromise = openDB<CivicLensDB>('civiclens-db', 1, {
+  if (!globalThis.__civiclens_dbPromise) {
+    globalThis.__civiclens_dbPromise = openDB<CivicLensDB>('civiclens-db', 2, {
       upgrade(db) {
         if (!db.objectStoreNames.contains('facilities')) {
           db.createObjectStore('facilities', { keyPath: 'id' });
@@ -59,7 +66,7 @@ export async function getDB() {
       },
     });
   }
-  return dbPromise;
+  return globalThis.__civiclens_dbPromise;
 }
 
 // ─── Facilities ────────────────────────────────────────────────────────────────

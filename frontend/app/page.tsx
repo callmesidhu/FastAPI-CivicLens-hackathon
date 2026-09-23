@@ -10,6 +10,7 @@ import WhyCivicLens from '@/components/ui/WhyCivicLens';
 import Footer from '@/components/ui/Footer';
 import TrackTicket from '@/components/reports/TrackTicket';
 import SyncManager from '@/components/sync/SyncManager';
+import CivicCareAI from '@/components/chat/CivicChatBot';
 
 export default function Home() {
   const router = useRouter();
@@ -47,6 +48,9 @@ export default function Home() {
 
       {/* Offline Sync Manager Widget */}
       <SyncManager />
+
+      {/* CivicCare AI — AI Chat Assistant */}
+      <CivicCareAI />
 
       {/* Track Ticket Modal */}
       {showTrackTicket && (

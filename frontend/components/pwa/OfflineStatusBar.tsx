@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { WifiOff, RefreshCw, CheckCircle2, Database } from 'lucide-react';
+import { WifiOff, RefreshCw, Database } from 'lucide-react';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useCacheWarmUp } from '@/hooks/useCacheWarmUp';
 import { formatDistanceToNow } from 'date-fns';
@@ -10,52 +9,24 @@ export default function OfflineStatusBar() {
   const { isOnline } = useNetworkStatus();
   const { lastSyncAt, cachedCount, syncing } = useCacheWarmUp();
 
-  // Show "back online" flash for 4 seconds after reconnecting
-  const [justReconnected, setJustReconnected] = useState(false);
-
-  useEffect(() => {
-    if (isOnline && lastSyncAt) {
-      setJustReconnected(true);
-      const t = setTimeout(() => setJustReconnected(false), 4000);
-      return () => clearTimeout(t);
-    }
-  }, [isOnline, lastSyncAt]);
-
-  // Nothing to show when online and stable
-  if (isOnline && !justReconnected && !syncing) return null;
-
-  const syncedAgo = lastSyncAt
-    ? formatDistanceToNow(new Date(lastSyncAt), { addSuffix: true })
-    : null;
-
-  // ── Back online / sync in progress banner ──
-  if (isOnline) {
+  // Show syncing banner while warm-up is in progress (online)
+  if (isOnline && syncing) {
     return (
-      <div
-        className={`
-          fixed top-0 inset-x-0 z-[10000]
-          transition-all duration-500
-          ${syncing ? 'bg-[#3D1860]' : 'bg-emerald-600'}
-        `}
-      >
+      <div className="fixed top-0 inset-x-0 z-[10000] bg-[#3D1860] transition-all duration-500">
         <div className="flex items-center justify-center gap-2 py-1.5 px-4">
-          {syncing ? (
-            <>
-              <RefreshCw className="w-3.5 h-3.5 text-white animate-spin" />
-              <span className="text-white text-[11px] font-semibold">Syncing map data…</span>
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-              <span className="text-white text-[11px] font-semibold">
-                Back online — {cachedCount} facilities cached
-              </span>
-            </>
-          )}
+          <RefreshCw className="w-3.5 h-3.5 text-white animate-spin" />
+          <span className="text-white text-[11px] font-semibold">Syncing map data…</span>
         </div>
       </div>
     );
   }
+
+  // Nothing to show when online and stable
+  if (isOnline) return null;
+
+  const syncedAgo = lastSyncAt
+    ? formatDistanceToNow(new Date(lastSyncAt), { addSuffix: true })
+    : null;
 
   // ── Offline banner ──
   return (
