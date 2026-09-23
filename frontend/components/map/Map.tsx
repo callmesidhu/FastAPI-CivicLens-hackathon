@@ -297,18 +297,20 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
           );
         })()}
 
-        {/* User Location Marker — Rendered on map canvas without forcing top global z-index */}
+        {/* User Location Marker — Rendered on map canvas with zIndex 40 */}
         {userLocation && (
           <Marker
             longitude={userLocation.lng}
             latitude={userLocation.lat}
             anchor="center"
+            style={{ zIndex: 40 }}
           >
             <div
-              className="relative flex items-center justify-center cursor-pointer"
+              className="relative flex items-center justify-center cursor-pointer pointer-events-auto"
               title="My Location"
             >
-              <div className="w-7 h-7 rounded-full bg-[#643579]/25 border-2 border-white shadow-xl flex items-center justify-center">
+              <div className="absolute w-8 h-8 rounded-full bg-[#643579]/30 animate-ping" />
+              <div className="relative w-7 h-7 rounded-full bg-[#643579]/35 border-2 border-white shadow-xl flex items-center justify-center">
                 <div className="w-4 h-4 rounded-full bg-[#3D1860] border-2 border-white shadow-md flex items-center justify-center">
                   <div className="w-1.5 h-1.5 rounded-full bg-white" />
                 </div>

@@ -22,10 +22,10 @@ export default function MapPage() {
 
   const handleFindMe = useCallback(() => {
     setLocating(true);
+    requestLocation();
     civicMapRef.current?.findMe();
-    // Reset after 6 s max in case geolocation never resolves
-    setTimeout(() => setLocating(false), 6000);
-  }, []);
+    setTimeout(() => setLocating(false), 3000);
+  }, [requestLocation]);
 
   const [filters, setFilters] = useState<DashboardFilterState>({
     status: 'all',
@@ -44,12 +44,15 @@ export default function MapPage() {
   const [showTrackTicket, setShowTrackTicket] = useState(false);
   const [ticketSuccessData, setTicketSuccessData] = useState<{ ticket: any; facility: Facility } | null>(null);
 
+  const activeLat = location.latitude ?? 10.0070408;
+  const activeLng = location.longitude ?? 76.3656069;
+
   const { data: rawFacilities, error, isLoading } = useSWR(
-    ['facilities', filters.type, filters.status, filters.radius, location.latitude, location.longitude, filters.searchQuery],
+    ['facilities', filters.type, filters.status, filters.radius, activeLat, activeLng, filters.searchQuery],
     () => fetchFacilities(
       filters.type === 'all' ? undefined : (filters.type === 'water' ? 'drinking_water' : filters.type),
       filters.status === 'all' ? undefined : filters.status,
-      undefined, undefined, location, filters.radius, filters.searchQuery
+      undefined, undefined, { latitude: activeLat, longitude: activeLng, permissionGranted: true, permissionDenied: false }, filters.radius, filters.searchQuery
     ),
     { refreshInterval: 12000 }
   );
@@ -83,11 +86,7 @@ export default function MapPage() {
           facilities={displayedFacilities}
           selectedFacility={selectedFacility}
           onSelectFacility={setSelectedFacility}
-          userLocation={
-            location.permissionGranted && location.latitude && location.longitude
-              ? { lat: location.latitude, lng: location.longitude }
-              : undefined
-          }
+          userLocation={{ lat: activeLat, lng: activeLng }}
           locationDenied={location.permissionDenied}
           onRequestLocation={requestLocation}
           showHotspots={filters.hotspotsOnly}
