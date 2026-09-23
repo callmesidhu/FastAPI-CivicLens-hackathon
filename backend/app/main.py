@@ -31,10 +31,10 @@ app.add_middleware(
 
 app.mount("/storage", StaticFiles(directory="storage"), name="storage")
 
-app.include_router(facilities.router, prefix="/api/v1/facilities", tags=["facilities"])
-app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
-app.include_router(tickets.router, prefix="/api/v1/tickets", tags=["tickets"])
-app.include_router(uploads.router, prefix="/api/v1/uploads", tags=["uploads"])
+app.include_router(facilities.router, prefix="/api/facilities", tags=["facilities"])
+app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
+app.include_router(tickets.router, prefix="/api/tickets", tags=["tickets"])
+app.include_router(uploads.router, prefix="/api/uploads", tags=["uploads"])
 
 @app.get("/")
 async def root():

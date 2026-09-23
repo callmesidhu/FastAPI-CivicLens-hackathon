@@ -29,7 +29,7 @@ sequenceDiagram
     participant MongoDB
     
     User->>Next.js: Opens Map
-    Next.js->>FastAPI: GET /api/v1/facilities/nearby (lat, lng, radius)
+    Next.js->>FastAPI: GET /api/facilities/nearby (lat, lng, radius)
     FastAPI->>MongoDB: $geoNear aggregation
     MongoDB-->>FastAPI: Raw Facilities
     FastAPI-->>Next.js: Formatted Facilities
