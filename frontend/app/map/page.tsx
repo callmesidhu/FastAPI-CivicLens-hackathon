@@ -9,10 +9,11 @@ import ReportForm from '@/components/reports/ReportForm';
 import TicketSuccess from '@/components/reports/TicketSuccess';
 import TrackTicket from '@/components/reports/TrackTicket';
 import SyncManager from '@/components/sync/SyncManager';
+import AddFacilityForm from '@/components/facilities/AddFacilityForm';
 import { fetchFacilities } from '@/lib/api';
 import { useLocation } from '@/hooks/useLocation';
 import { Facility } from '@/types';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Plus } from 'lucide-react';
 import { DashboardFilterState } from '@/components/facilities/CivicDashboardCard';
 
 export default function MapPage() {
@@ -44,6 +45,8 @@ export default function MapPage() {
   const [reportingFacility, setReportingFacility] = useState<Facility | null>(null);
   const [showTrackTicket, setShowTrackTicket] = useState(false);
   const [ticketSuccessData, setTicketSuccessData] = useState<{ ticket: any; facility: Facility } | null>(null);
+  
+  const [showAddFacility, setShowAddFacility] = useState(false);
 
   const activeLat = location.latitude ?? 10.0070408;
   const activeLng = location.longitude ?? 76.3656069;
@@ -247,6 +250,31 @@ export default function MapPage() {
           facility={ticketSuccessData.facility}
           onClose={() => setTicketSuccessData(null)}
           onTrack={() => { setTicketSuccessData(null); setShowTrackTicket(true); }}
+        />
+      )}
+
+      {/* Add Missing Facility FAB */}
+      <button
+        onClick={() => setShowAddFacility(true)}
+        className="absolute bottom-24 right-4 z-30 md:bottom-8 md:right-8 bg-[#3D1860] text-white p-4 rounded-full shadow-2xl hover:bg-[#643579] transition-transform hover:scale-110 flex items-center justify-center group"
+      >
+        <Plus className="w-6 h-6" />
+        <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap group-hover:ml-2 font-bold text-sm">
+          Add Facility
+        </span>
+      </button>
+
+      {showAddFacility && (
+        <AddFacilityForm
+          initialLat={activeLat}
+          initialLng={activeLng}
+          onClose={() => setShowAddFacility(false)}
+          onSuccess={(facility) => {
+            setShowAddFacility(false);
+            // Optionally mutate SWR to refresh list, or just alert success
+            alert("Facility added successfully! It is pending verification.");
+            window.location.reload(); // Simple refresh for hackathon purposes
+          }}
         />
       )}
 

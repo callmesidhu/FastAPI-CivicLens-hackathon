@@ -6,6 +6,8 @@ import ReportForm from '@/components/reports/ReportForm';
 import TicketSuccess from '@/components/reports/TicketSuccess';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { getMetadata } from '@/lib/db';
+import RatingsView from './RatingsView';
+import { verifyFacility } from '@/lib/api';
 
 interface FacilityDetailsProps {
   facility: Facility | null;
@@ -64,6 +66,27 @@ export default function FacilityDetails({ facility, onClose }: FacilityDetailsPr
     window.open(url, '_blank');
   };
 
+  const handleVerify = async () => {
+    try {
+      let userId = "demo_user_123";
+      let userRole = "citizen";
+      try {
+        const stored = localStorage.getItem('civiclens_user');
+        if (stored) {
+          const user = JSON.parse(stored);
+          userId = user.id || userId;
+          userRole = user.role || userRole;
+        }
+      } catch(e) {}
+
+      await verifyFacility(facility.id, userId, userRole);
+      alert("Verification successful!");
+      onClose(); // Close details to refresh map state ideally
+    } catch (err: any) {
+      alert(err.message || "Failed to verify facility");
+    }
+  };
+
   return (
     <>
       <div className="absolute bottom-0 left-0 right-0 md:bottom-auto md:top-4 md:right-4 md:left-auto md:w-96 bg-white rounded-t-2xl md:rounded-2xl shadow-2xl z-40 transition-transform transform">
@@ -85,6 +108,19 @@ export default function FacilityDetails({ facility, onClose }: FacilityDetailsPr
                 <p className="font-semibold">Recent User Report</p>
                 <p className="text-[#643579] mt-0.5 text-xs">A user recently reported a change in condition. Not yet verified.</p>
               </div>
+            </div>
+          ) : facility.status === 'pending' && (
+            <div className="mb-4 bg-purple-50 border border-purple-200 text-purple-800 px-3 py-2 rounded-lg text-sm flex items-start justify-between">
+              <div className="flex items-start">
+                <ShieldCheck className="w-5 h-5 mr-2 shrink-0 text-purple-500" />
+                <div>
+                  <p className="font-semibold">Pending Verification</p>
+                  <p className="text-purple-700/80 mt-0.5 text-xs">This facility was added by a citizen.</p>
+                </div>
+              </div>
+              <button onClick={handleVerify} className="bg-purple-600 text-white px-3 py-1 rounded-md text-xs font-semibold hover:bg-purple-700 transition-colors">
+                Verify
+              </button>
             </div>
           ) : isStale && (
             <div className="mb-4 bg-orange-50 border border-orange-200 text-orange-800 px-3 py-2 rounded-lg text-sm flex items-start">
@@ -198,6 +234,8 @@ export default function FacilityDetails({ facility, onClose }: FacilityDetailsPr
                 Report Issue
               </button>
             </div>
+            
+            <RatingsView facilityId={facility.id} />
           </div>
         </div>
       </div>

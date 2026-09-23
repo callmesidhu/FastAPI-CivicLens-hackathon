@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.db.database import connect_to_mongo, close_mongo_connection
-from app.routes import facilities, reports, tickets, uploads, auth, location
+from app.routes import facilities, reports, tickets, uploads, auth, location, ratings
 from contextlib import asynccontextmanager
 import os
 import sys
@@ -49,7 +49,7 @@ app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
 app.include_router(tickets.router, prefix="/api/tickets", tags=["tickets"])
 app.include_router(uploads.router, prefix="/api/uploads", tags=["uploads"])
 app.include_router(location.router, prefix="/api/location", tags=["location"])
-
+app.include_router(ratings.router, prefix="/api/ratings", tags=["ratings"])
 @app.get("/")
 async def root():
     return {"message": "Welcome to CivicLens API"}

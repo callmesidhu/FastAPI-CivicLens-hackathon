@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, HTTPException, Depends
 from typing import Optional, List
-from app.schemas.facility import FacilityListResponse, FacilityResponse, RouteSearchRequest
+from app.schemas.facility import FacilityListResponse, FacilityResponse, RouteSearchRequest, FacilityCreate
 from app.db.database import db
 from app.core.config import settings
 import os
@@ -64,6 +64,9 @@ def format_facility(doc: dict, distance_meters: Optional[float] = None) -> dict:
         "availability": doc.get("availability", ""),
         "condition": condition,
         "lastUpdated": last_updated_time,
+        "status": doc.get("status", "active"),
+        "submittedBy": doc.get("submittedBy"),
+        "verifications": doc.get("verifications", []),
         "confidenceScore": scoring["confidenceScore"],
         "confidenceLevel": scoring["confidenceLevel"],
         "recommendationScore": rec_score,
@@ -80,10 +83,17 @@ async def get_facilities(
     type: Optional[str] = Query(None, description="Filter by facility type"),
     condition: Optional[str] = Query(None, description="Filter by condition"),
     wheelchairAccessible: Optional[bool] = Query(None, description="Filter by wheelchair accessibility"),
-    availability: Optional[str] = Query(None, description="Filter by availability")
+    availability: Optional[str] = Query(None, description="Filter by availability"),
+    status: Optional[str] = Query("active", description="Filter by status")
 ):
     collection = get_collection()
     query = {}
+    
+    if status != "all":
+        if status == "active":
+            query["$or"] = [{"status": "active"}, {"status": {"$exists": False}}]
+        else:
+            query["status"] = status
     
     if type:
         query["type"] = "drinking_water" if type == "water" else type
@@ -116,11 +126,17 @@ async def get_nearby_facilities(
     type: Optional[str] = Query(None, description="Filter by facility type"),
     condition: Optional[str] = Query(None, description="Filter by condition"),
     wheelchairAccessible: Optional[bool] = Query(None, description="Filter by wheelchair accessibility"),
-    availability: Optional[str] = Query(None, description="Filter by availability")
+    availability: Optional[str] = Query(None, description="Filter by availability"),
+    status: Optional[str] = Query("active", description="Filter by status")
 ):
     collection = get_collection()
     
     match_query = {}
+    if status != "all":
+        if status == "active":
+            match_query["$or"] = [{"status": "active"}, {"status": {"$exists": False}}]
+        else:
+            match_query["status"] = status
     if type:
         match_query["type"] = "drinking_water" if type == "water" else type
     if condition:
@@ -163,10 +179,17 @@ async def get_nearby_facilities(
 
 @router.get("/search", response_model=FacilityListResponse)
 async def search_facilities(
-    q: str = Query(..., description="Search query")
+    q: str = Query(..., description="Search query"),
+    status: Optional[str] = Query("active", description="Filter by status")
 ):
     collection = get_collection()
-    cursor = collection.find({"$text": {"$search": q}})
+    query: dict = {"$text": {"$search": q}}
+    if status != "all":
+        if status == "active":
+            query["$or"] = [{"status": "active"}, {"status": {"$exists": False}}]
+        else:
+            query["status"] = status
+    cursor = collection.find(query)
     
     facilities = []
     async for doc in cursor:
@@ -281,3 +304,67 @@ async def search_facilities_along_route(req: RouteSearchRequest):
     facilities.sort(key=lambda x: x.get("recommendationScore", 0.0), reverse=True)
         
     return {"data": facilities}
+
+from datetime import datetime, timezone
+
+@router.post("/", response_model=FacilityResponse)
+async def create_facility(
+    facility: FacilityCreate,
+    userRole: str = Query("citizen", description="Role of the user submitting"),
+):
+    collection = get_collection()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    
+    doc = facility.model_dump()
+    doc["lastUpdated"] = now_iso
+    
+    if userRole == "admin":
+        doc["status"] = "active"
+    else:
+        doc["status"] = "pending"
+        doc["verifications"] = []
+        
+    res = await collection.insert_one(doc)
+    doc["_id"] = res.inserted_id
+    
+    return format_facility(doc)
+
+@router.post("/{facility_id}/verify")
+async def verify_facility(
+    facility_id: str,
+    userId: str = Query(..., description="ID of user verifying"),
+    userRole: str = Query("citizen", description="Role of user verifying")
+):
+    collection = get_collection()
+    try:
+        obj_id = ObjectId(facility_id)
+    except Exception:
+        raise HTTPException(status_code=422, detail="Invalid facility ID format")
+
+    doc = await collection.find_one({"_id": obj_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Facility not found")
+        
+    if doc.get("status") == "active":
+        return {"message": "Facility is already active", "facility": format_facility(doc)}
+
+    if userRole == "admin":
+        await collection.update_one({"_id": obj_id}, {"$set": {"status": "active"}})
+        doc["status"] = "active"
+    else:
+        # User verification
+        verifications = doc.get("verifications", [])
+        if userId in verifications or userId == doc.get("submittedBy"):
+            raise HTTPException(status_code=400, detail="User already verified or submitted this facility")
+            
+        verifications.append(userId)
+        update_data = {"verifications": verifications}
+        
+        if len(verifications) >= 2:
+            update_data["status"] = "active"
+            doc["status"] = "active"
+            
+        await collection.update_one({"_id": obj_id}, {"$set": update_data})
+        doc["verifications"] = verifications
+        
+    return {"message": "Verification successful", "facility": format_facility(doc)}
