@@ -22,9 +22,8 @@ export default function HeroSection({ onReportClick, onViewMapClick }: HeroSecti
 
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
         {/* Circular Logo Badge */}
-        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white shadow-2xl flex flex-col items-center justify-center border-4 border-blue-400/40 mb-6 p-2 transform hover:scale-105 transition">
-          <div className="text-3xl sm:text-4xl">🏛️</div>
-          <span className="text-[10px] font-black text-blue-700 tracking-wider">CIVICLENS</span>
+        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white shadow-2xl flex items-center justify-center border-4 border-blue-400/40 mb-6 p-2.5 transform hover:scale-105 transition overflow-hidden">
+          <img src="/logo.png" alt="CivicLens Logo" className="w-full h-full object-contain" />
         </div>
 
         {/* Tagline Pill */}

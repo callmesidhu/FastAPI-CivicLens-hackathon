@@ -14,8 +14,8 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand */}
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shadow-xs">
-            <span className="text-xl">🏛️</span>
+          <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-xs overflow-hidden">
+            <img src="/logo.png" alt="CivicLens Logo" className="w-full h-full object-contain" />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center space-x-1.5">
