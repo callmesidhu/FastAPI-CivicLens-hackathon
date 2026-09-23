@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { Camera, MapPin, Truck, CheckCircle2 } from 'lucide-react';
+import { MapPin, ShieldCheck, Camera, Ticket } from 'lucide-react';
 import { useInView } from '@/hooks/useParallax';
 
 export default function HowItWorks() {
@@ -16,42 +16,42 @@ export default function HowItWorks() {
     {
       num: 1,
       numBg: 'bg-[#F5EDF7] text-[#3D1860] border border-[#BB99CD]',
-      title: '1. Take a Photo',
+      title: '1. Find Nearby Amenities',
       description:
-        'Snap or upload a picture of the amenity or issue. Your phone GPS marks the location automatically.',
-      footerIcon: <Camera className="w-3.5 h-3.5 text-[#643579]" />,
-      footerText: 'Camera & Location',
+        'Locate nearby public toilets and drinking-water points on the map with real-time GPS distance, operating hours, and wheelchair accessibility filters.',
+      footerIcon: <MapPin className="w-3.5 h-3.5 text-[#643579]" />,
+      footerText: 'Geospatial GPS Search',
       footerColor: 'text-[#643579]',
     },
     {
       num: 2,
       numBg: 'bg-[#BB99CD]/25 text-[#3D1860] border border-[#BB99CD]',
-      title: '2. Ward Assigned',
+      title: '2. Check Status & Confidence',
       description:
-        'CivicLens automatically links your report to the correct city ward and assigns it to the local municipal supervisor.',
-      footerIcon: <MapPin className="w-3.5 h-3.5 text-[#3D1860]" />,
-      footerText: 'Automatic Ward Routing',
+        'Inspect real-time facility conditions (clean, broken, locked, dry) and dynamic Confidence Scores (0–100%) before traveling to avoid wasted trips.',
+      footerIcon: <ShieldCheck className="w-3.5 h-3.5 text-[#3D1860]" />,
+      footerText: 'Live Confidence Score',
       footerColor: 'text-[#3D1860]',
     },
     {
       num: 3,
       numBg: 'bg-[#643579]/15 text-[#3D1860] border border-[#643579]/30',
-      title: '3. Crew Dispatched',
+      title: '3. Report Issues Anonymously',
       description:
-        'Field response sanitation and plumbing crews are sent promptly to clean or repair the facility before problems escalate.',
-      footerIcon: <Truck className="w-3.5 h-3.5 text-[#643579]" />,
-      footerText: 'Fast Response Timelines',
+        'Found a broken tap or locked restroom? Submit an instant report with optional photo proof in one tap. No login, phone number, or account required.',
+      footerIcon: <Camera className="w-3.5 h-3.5 text-[#643579]" />,
+      footerText: 'Zero-Login Anonymous Report',
       footerColor: 'text-[#643579]',
     },
     {
       num: 4,
-      numBg: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-      title: '4. Verified Cleaned',
+      numBg: 'bg-[#BB99CD]/25 text-[#3D1860] border border-[#BB99CD]',
+      title: '4. Track Ticket & Civic Routing',
       description:
-        'Crews upload photo proof once the facility is cleaned or restored. Citizens can inspect resolution evidence in real time.',
-      footerIcon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />,
-      footerText: 'Photo Proof Verified',
-      footerColor: 'text-emerald-700',
+        'Generates an official trackable ticket (CF-XXXX) automatically routed to the responsible Municipal Local Body and Department with status updates.',
+      footerIcon: <Ticket className="w-3.5 h-3.5 text-[#643579]" />,
+      footerText: 'Trackable Ticket (CF-XXXX)',
+      footerColor: 'text-[#643579]',
     },
   ];
 

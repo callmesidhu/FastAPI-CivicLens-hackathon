@@ -13,57 +13,39 @@ export default function WhyCivicLens() {
   const features = [
     {
       index: '01',
-      title: 'Smart Photo Scan',
+      title: 'Dynamic Confidence Score',
       description:
-        'Our civic AI model quickly checks your uploaded photo to identify cleanliness, damage, or water point status automatically.',
-      tag: 'Instant Recognition',
+        'Every facility displays a real-time confidence score (0–100%) calculated dynamically from report freshness and community status updates.',
+      tag: 'Reliability Metric',
       tagColor: 'text-[#3D1860]',
-      meta: 'Automated AI Triage',
+      meta: 'Decay & Freshness Algorithm',
     },
     {
       index: '02',
-      title: 'Direct Ward Routing',
+      title: 'Automated Municipal Routing',
       description:
-        'Your pinned location is instantly matched with your local municipal ward office so the right field officer takes responsibility.',
-      tag: 'Local Team Assigned',
+        'Reports are automatically linked to the mapped Municipal Local Body and directed to the specific department (Water & Sanitation) without delay.',
+      tag: 'Department Mapping',
       tagColor: 'text-[#643579]',
-      meta: 'Kochi Ward Sync',
+      meta: 'Automated Civic Dispatch',
     },
     {
       index: '03',
-      title: 'Fast Action Priority',
+      title: '100% Anonymous & Private',
       description:
-        'Facilities near transit hubs, hospitals, or high-footfall areas get high priority so teams can clear issues promptly before conditions deteriorate.',
-      tag: 'Urgent Issues First',
-      tagColor: 'text-red-600',
-      meta: 'Dynamic Queue Priority',
+        'No user accounts, phone numbers, or emails required. CivicLens collects zero personal identifiers or movement history—civic participation with total privacy.',
+      tag: 'Zero Personal Data',
+      tagColor: 'text-[#3D1860]',
+      meta: 'Privacy-First Architecture',
     },
     {
       index: '04',
-      title: 'Clear Deadlines',
+      title: 'Offline-First & Auto Sync',
       description:
-        'Teams work against prompt response timelines. If an issue is delayed, it automatically alerts senior municipal supervisors.',
-      tag: 'Accountability Guaranteed',
+        'Full functionality when internet drops. Search cached facilities in IndexedDB, queue offline reports (OFF-XXXX), and auto-sync with idempotency upon reconnecting.',
+      tag: 'Network Resilient',
       tagColor: 'text-[#643579]',
-      meta: 'SLA Escalation Alerts',
-    },
-    {
-      index: '05',
-      title: 'Amenity Hotspot Map',
-      description:
-        'Multiple reports in the same area highlight chronic breakdown zones so municipal authorities can upgrade entire public infrastructure corridors.',
-      tag: 'Neighborhood Prevention',
-      tagColor: 'text-[#3D1860]',
-      meta: 'Predictive Infrastructure',
-    },
-    {
-      index: '06',
-      title: 'Verified Photo Proof',
-      description:
-        'Crews upload photo proof once the amenity is cleaned or fixed. Citizens can inspect resolution evidence directly in My Reports.',
-      tag: 'Photo Proof Verified',
-      tagColor: 'text-emerald-600',
-      meta: 'Audited Resolutions',
+      meta: 'IndexedDB & Idempotency Key',
     },
   ];
 
@@ -72,8 +54,6 @@ export default function WhyCivicLens() {
     'reveal-delay-2',
     'reveal-delay-3',
     'reveal-delay-4',
-    'reveal-delay-5',
-    'reveal-delay-6',
   ];
 
   return (
@@ -84,7 +64,7 @@ export default function WhyCivicLens() {
         className={`reveal ${headingInView ? 'in-view' : ''}`}
       >
         <div className="inline-flex items-center space-x-1.5 bg-[#F5EDF7] border border-[#BB99CD] text-[#3D1860] text-xs font-extrabold px-4 py-1 rounded-full mb-3 uppercase tracking-wider shadow-2xs">
-          <span>MUNICIPAL INNOVATION</span>
+          <span>CIVIC ARCHITECTURE</span>
         </div>
 
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-3">
@@ -92,14 +72,14 @@ export default function WhyCivicLens() {
         </h2>
 
         <p className="max-w-2xl mx-auto text-sm sm:text-base text-gray-500 font-medium mb-12">
-          Built to keep our streets clear, amenities functioning, and ensure every report is resolved quickly.
+          Engineered for reliability, community accessibility, and resilient civic reporting across Kerala.
         </p>
       </div>
 
-      {/* 6 Cards Grid — clean icon-free architectural cards */}
+      {/* 4 Cards Grid — clean icon-free architectural cards */}
       <div
         ref={gridRef}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left"
       >
         {features.map((item, idx) => (
           <div
