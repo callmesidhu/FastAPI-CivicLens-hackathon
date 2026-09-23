@@ -20,6 +20,8 @@ class TicketResponse(BaseModel):
     facilityName: Optional[str] = None
     localBodyName: Optional[str] = None
     localBodyWard: Optional[str] = None
+    resolutionNotes: Optional[str] = None
+    resolvedImageUrl: Optional[str] = None
 
 class TicketCreationResponse(BaseModel):
     reportId: str

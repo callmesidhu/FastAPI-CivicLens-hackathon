@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { AuthProvider } from '@/lib/authContext';
+import LoginModal from '@/components/auth/LoginModal';
 
 export const metadata: Metadata = {
   title: 'CivicLens - See. Verify. Access.',
@@ -19,7 +21,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        {children}
+        <AuthProvider>
+          {children}
+          <LoginModal />
+        </AuthProvider>
       </body>
     </html>
   );
