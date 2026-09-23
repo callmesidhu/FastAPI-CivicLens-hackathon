@@ -20,7 +20,7 @@ export default function PinInspectionPanel({
     return (
       <div className="w-full lg:w-96 bg-white rounded-3xl border border-gray-200/80 shadow-xs p-6 flex flex-col items-center justify-center text-center min-h-[420px]">
         <div className="w-full flex items-center space-x-2 text-gray-800 font-bold text-base mb-12">
-          <Info className="w-5 h-5 text-blue-600" />
+          <Info className="w-5 h-5 text-amber-600" />
           <span>Transparency Pin Inspection</span>
         </div>
 
@@ -72,7 +72,7 @@ export default function PinInspectionPanel({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
           <div className="flex items-center space-x-2 text-gray-900 font-bold text-base">
-            <Info className="w-5 h-5 text-blue-600" />
+            <Info className="w-5 h-5 text-amber-600" />
             <span>Transparency Pin Inspection</span>
           </div>
           {onClose && (
@@ -88,15 +88,15 @@ export default function PinInspectionPanel({
         {/* Facility Name & Type */}
         <div className="mb-4">
           <div className="flex items-center space-x-2 mb-1.5">
-            <span className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+            <span className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
               {facility.type === 'toilet' ? (
                 <>
-                  <Users className="w-3.5 h-3.5 mr-1 text-blue-600" />
+                  <Users className="w-3.5 h-3.5 mr-1 text-amber-700" />
                   <span>Public Sanitation</span>
                 </>
               ) : (
                 <>
-                  <Droplet className="w-3.5 h-3.5 mr-1 text-blue-600 fill-blue-600" />
+                  <Droplet className="w-3.5 h-3.5 mr-1 text-amber-700 fill-amber-700" />
                   <span>Drinking Water</span>
                 </>
               )}
@@ -163,8 +163,8 @@ export default function PinInspectionPanel({
           </div>
 
           {facility.verifiedByMunicipal && (
-            <div className="flex items-center space-x-1.5 text-xs text-blue-700 font-medium pt-1">
-              <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+            <div className="flex items-center space-x-1.5 text-xs text-amber-800 font-medium pt-1">
+              <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
               <span>Official Municipal Inspection Cleared</span>
             </div>
           )}
@@ -175,7 +175,7 @@ export default function PinInspectionPanel({
       <div className="space-y-2 pt-2">
         <button
           onClick={() => onReportIssue(facility)}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs transition flex items-center justify-center space-x-2"
+          className="w-full bg-amber-400 hover:bg-amber-500 text-gray-950 font-black text-xs py-2.5 px-4 rounded-xl shadow-xs transition flex items-center justify-center space-x-2"
         >
           <Flag className="w-3.5 h-3.5" />
           <span>Report Issue / Update Condition</span>

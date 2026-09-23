@@ -7,23 +7,23 @@ export default function HowItWorks() {
   const steps = [
     {
       num: 1,
-      numBg: 'bg-blue-50 text-blue-600 border border-blue-200',
+      numBg: 'bg-amber-50 text-amber-700 border border-amber-200',
       title: '1. Take a Photo',
       description:
         'Snap or upload a picture of the amenity or issue. Your phone GPS marks the location automatically.',
-      footerIcon: <Camera className="w-3.5 h-3.5 text-blue-600" />,
+      footerIcon: <Camera className="w-3.5 h-3.5 text-amber-600" />,
       footerText: 'Camera & Location',
-      footerColor: 'text-blue-600',
+      footerColor: 'text-amber-700',
     },
     {
       num: 2,
-      numBg: 'bg-amber-50 text-amber-600 border border-amber-200',
+      numBg: 'bg-blue-50 text-blue-700 border border-blue-200',
       title: '2. Ward Assigned',
       description:
         'CivicLens automatically links your report to the correct city ward and assigns it to the local municipal supervisor.',
-      footerIcon: <MapPin className="w-3.5 h-3.5 text-amber-600" />,
+      footerIcon: <MapPin className="w-3.5 h-3.5 text-blue-600" />,
       footerText: 'Automatic Ward Routing',
-      footerColor: 'text-amber-600',
+      footerColor: 'text-blue-700',
     },
     {
       num: 3,
@@ -50,7 +50,7 @@ export default function HowItWorks() {
   return (
     <section className="w-full py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
       {/* Badge */}
-      <div className="inline-flex items-center space-x-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold px-3.5 py-1 rounded-full mb-3 uppercase tracking-wider shadow-2xs">
+      <div className="inline-flex items-center space-x-1.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold px-3.5 py-1 rounded-full mb-3 uppercase tracking-wider shadow-2xs">
         <span>SIMPLE 4-STEP PROCESS</span>
       </div>
 

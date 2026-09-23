@@ -53,7 +53,7 @@ export default function MapPreviewCta() {
               <div className="text-[10px] text-blue-200">Esri World Imagery</div>
             </div>
             <div className="bg-white/10 backdrop-blur-xs border border-white/10 rounded-2xl p-3 text-center flex flex-col items-center">
-              <Flame className="w-5 h-5 text-amber-300 mb-1" />
+              <Flame className="w-5 h-5 text-blue-300 mb-1" />
               <div className="text-xs font-bold text-white">Hotspots</div>
               <div className="text-[10px] text-blue-200">Real-time Detection</div>
             </div>
@@ -63,9 +63,9 @@ export default function MapPreviewCta() {
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <Link
               href="/map"
-              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2.5 bg-yellow-400 hover:bg-yellow-300 text-gray-950 font-black text-sm sm:text-base px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition transform active:scale-95"
+              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm sm:text-base px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition transform active:scale-95"
             >
-              <MapPin className="w-5 h-5 text-gray-950" />
+              <MapPin className="w-5 h-5 text-white" />
               <span>Open Public Infrastructure Map</span>
               <ArrowRight className="w-4 h-4 ml-1" />
             </Link>

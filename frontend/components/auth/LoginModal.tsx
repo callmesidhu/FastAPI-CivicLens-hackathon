@@ -21,7 +21,7 @@ export default function LoginModal() {
         {/* Header */}
         <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500 text-gray-950 flex items-center justify-center shadow-xs">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
@@ -46,17 +46,17 @@ export default function LoginModal() {
               onClick={() => setSelectedRole('citizen')}
               className={`cursor-pointer rounded-2xl border-2 p-4 transition-all flex flex-col justify-between ${
                 selectedRole === 'citizen'
-                  ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-100'
+                  ? 'border-amber-500 bg-amber-50/50 ring-2 ring-amber-100'
                   : 'border-gray-200 hover:border-gray-300 bg-white'
               }`}
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
                     <User className="w-5 h-5" />
                   </div>
                   {selectedRole === 'citizen' && (
-                    <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                   )}
                 </div>
                 <h3 className="font-black text-sm text-gray-900 mb-0.5">Citizen / Reporter</h3>
@@ -110,7 +110,7 @@ export default function LoginModal() {
               placeholder={selectedRole === 'citizen' ? 'e.g. Arun Kumar' : 'e.g. Ward 14 Sanitation Inspector'}
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 outline-none focus:border-blue-500 focus:bg-white transition"
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 outline-none focus:border-amber-500 focus:bg-white transition"
             />
           </div>
 
@@ -119,7 +119,7 @@ export default function LoginModal() {
             <button
               onClick={() => handleLogin(selectedRole)}
               className={`w-full py-3 px-4 rounded-xl font-bold text-xs text-white shadow-md transition transform active:scale-98 flex items-center justify-center space-x-2 ${
-                selectedRole === 'admin' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700'
+                selectedRole === 'admin' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-amber-400 hover:bg-amber-500 text-gray-950 font-black'
               }`}
             >
               <span>Sign In as {selectedRole === 'citizen' ? 'Citizen Reporter' : 'Government Authority (Admin)'}</span>

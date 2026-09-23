@@ -104,14 +104,14 @@ export default function SyncManager() {
         
         {isOnline && isSyncing && (
           <>
-            <RefreshCw className="w-4 h-4 animate-spin text-blue-400" />
+            <RefreshCw className="w-4 h-4 animate-spin text-amber-400" />
             <span>{syncStatus}</span>
           </>
         )}
         
         {isOnline && !isSyncing && pendingCount > 0 && (
           <>
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
             <span>{pendingCount} report{pendingCount > 1 ? 's' : ''} waiting to sync</span>
             <button 
               onClick={syncNow}

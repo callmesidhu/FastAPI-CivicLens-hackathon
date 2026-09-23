@@ -6,22 +6,22 @@ import { Cpu, MapPin, Flame, Clock, Layers, CheckCircle2 } from 'lucide-react';
 export default function WhyCivicLens() {
   const features = [
     {
-      icon: <Cpu className="w-5 h-5 text-blue-600" />,
-      iconBg: 'bg-blue-50 border-blue-100',
+      icon: <Cpu className="w-5 h-5 text-amber-600" />,
+      iconBg: 'bg-amber-50 border-amber-100',
       title: 'Smart Photo Scan',
       description:
         'Our civic AI model quickly checks your uploaded photo to identify cleanliness, damage, or water point status automatically.',
       tag: 'Instant Recognition',
-      tagColor: 'text-blue-600',
+      tagColor: 'text-amber-700',
     },
     {
-      icon: <MapPin className="w-5 h-5 text-amber-600" />,
-      iconBg: 'bg-amber-50 border-amber-100',
+      icon: <MapPin className="w-5 h-5 text-blue-600" />,
+      iconBg: 'bg-blue-50 border-blue-100',
       title: 'Direct Ward Routing',
       description:
         'Your pinned location is instantly matched with your local municipal ward office so the right field officer takes responsibility.',
       tag: 'Local Team Assigned',
-      tagColor: 'text-amber-600',
+      tagColor: 'text-blue-700',
     },
     {
       icon: <Flame className="w-5 h-5 text-red-500" />,
@@ -33,13 +33,13 @@ export default function WhyCivicLens() {
       tagColor: 'text-red-500',
     },
     {
-      icon: <Clock className="w-5 h-5 text-blue-600" />,
-      iconBg: 'bg-blue-50 border-blue-100',
+      icon: <Clock className="w-5 h-5 text-amber-600" />,
+      iconBg: 'bg-amber-50 border-amber-100',
       title: 'Clear Deadlines',
       description:
         'Teams work against prompt response timelines. If an issue is delayed, it automatically alerts senior municipal supervisors.',
       tag: 'Accountability Guaranteed',
-      tagColor: 'text-blue-600',
+      tagColor: 'text-amber-700',
     },
     {
       icon: <Layers className="w-5 h-5 text-purple-600" />,
@@ -64,7 +64,7 @@ export default function WhyCivicLens() {
   return (
     <section className="w-full py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
       {/* Badge */}
-      <div className="inline-flex items-center space-x-1.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold px-4 py-1 rounded-full mb-3 uppercase tracking-wider shadow-2xs">
+      <div className="inline-flex items-center space-x-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold px-4 py-1 rounded-full mb-3 uppercase tracking-wider shadow-2xs">
         <span>MUNICIPAL INNOVATION</span>
       </div>
 
