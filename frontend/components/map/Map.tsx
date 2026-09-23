@@ -21,6 +21,8 @@ interface CivicMapProps {
 export interface CivicMapHandle {
   findMe: () => void;
   isLocating: boolean;
+  toggle3D: () => void;
+  is3D: boolean;
 }
 
 // Fix for Turbopack worker issue
@@ -158,11 +160,29 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
     }
   }, [userLocation, flyToUser, onRequestLocation]);
 
-  // Expose findMe() and isLocating to parent via ref
+  const [is3D, setIs3D] = useState(false);
+
+  const toggle3D = useCallback(() => {
+    setIs3D((prev) => {
+      const next = !prev;
+      if (mapRef.current) {
+        mapRef.current.easeTo({
+          pitch: next ? 60 : 0,
+          bearing: next ? -17.6 : 0,
+          duration: 1000,
+        });
+      }
+      return next;
+    });
+  }, []);
+
+  // Expose findMe(), toggle3D(), isLocating, and is3D to parent via ref
   useImperativeHandle(ref, () => ({
     findMe: handleFindMe,
     isLocating: locating,
-  }), [handleFindMe, locating]);
+    toggle3D,
+    is3D,
+  }), [handleFindMe, locating, toggle3D, is3D]);
 
   // When location resolves (after requesting), fly there
   useEffect(() => {

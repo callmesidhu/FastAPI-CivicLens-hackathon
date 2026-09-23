@@ -162,14 +162,23 @@ function SelectedFacilityCard({ facility, onClose, onReportIssue }: {
         </div>
       )}
 
-      {/* Navigate button */}
-      <button
-        onClick={openNavigation}
-        className="w-full flex items-center justify-center gap-2 bg-[#F5EDF7] hover:bg-[#BB99CD]/30 text-[#3D1860] border border-[#BB99CD]/40 font-semibold text-xs py-2.5 rounded-xl transition mb-2"
-      >
-        <Navigation className="w-3.5 h-3.5" />
-        Directions in Google Maps
-      </button>
+      {/* Action Buttons row: Directions + Report Issue */}
+      <div className="flex gap-2 mb-2">
+        <button
+          onClick={openNavigation}
+          className="flex-1 flex items-center justify-center gap-1.5 bg-[#F5EDF7] hover:bg-[#BB99CD]/30 text-[#3D1860] border border-[#BB99CD]/40 font-semibold text-xs py-2.5 rounded-xl transition"
+        >
+          <Navigation className="w-3.5 h-3.5" />
+          Directions
+        </button>
+        <button
+          onClick={() => onReportIssue(facility)}
+          className="flex-1 flex items-center justify-center gap-1.5 bg-[#3D1860] hover:bg-[#643579] text-white font-bold text-xs py-2.5 rounded-xl shadow-xs transition"
+        >
+          <Flag className="w-3.5 h-3.5" />
+          Report Issue
+        </button>
+      </div>
     </div>
   );
 }
@@ -376,23 +385,6 @@ export default function MapBottomSheet({
               />
             ))
           )}
-        </div>
-
-        {/* Primary CTA */}
-        <div className="px-4 pb-6 pt-3 shrink-0 bg-white border-t border-gray-100">
-          <button
-            onClick={() => {
-              if (selectedFacility) onReportIssue(selectedFacility);
-              else if (facilities.length > 0) {
-                onSelectFacility(facilities[0]);
-                onReportIssue(facilities[0]);
-              }
-            }}
-            className="w-full bg-[#3D1860] hover:bg-[#643579] active:scale-[0.98] text-white font-black text-sm py-4 rounded-2xl shadow-lg transition flex items-center justify-center gap-2"
-          >
-            <Flag className="w-4 h-4" />
-            {selectedFacility ? `Report Issue — ${selectedFacility.name}` : 'Select a Facility to Report Issue'}
-          </button>
         </div>
       </div>
 

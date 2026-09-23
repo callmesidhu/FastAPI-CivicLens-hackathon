@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Search, Droplet, Users, X, Navigation } from 'lucide-react';
+import { ArrowLeft, Search, Droplet, Users, X, Navigation, Box } from 'lucide-react';
 import { DashboardFilterState } from '@/components/facilities/CivicDashboardCard';
 
 interface MapSearchBarProps {
@@ -12,6 +12,8 @@ interface MapSearchBarProps {
   displayedCount: number;
   onFindMe: () => void;
   locating?: boolean;
+  onToggle3D?: () => void;
+  is3D?: boolean;
 }
 
 export default function MapSearchBar({
@@ -21,6 +23,8 @@ export default function MapSearchBar({
   displayedCount,
   onFindMe,
   locating = false,
+  onToggle3D,
+  is3D = false,
 }: MapSearchBarProps) {
   return (
     <div className="absolute top-0 left-0 right-0 z-40 px-3 pt-3 pb-2 pointer-events-none">
@@ -56,11 +60,9 @@ export default function MapSearchBar({
               </button>
             )}
           </div>
-
-
         </div>
 
-        {/* Type chips + Find Me pinned right */}
+        {/* Type chips + 2D/3D & Find Me pinned right */}
         <div className="flex items-center gap-2">
           {/* Scrollable type chips */}
           <div className="flex items-center gap-2 overflow-x-auto pb-0.5 no-scrollbar flex-1 min-w-0">
@@ -89,7 +91,23 @@ export default function MapSearchBar({
             })}
           </div>
 
-          {/* Find Me — pinned to the right, never scrolls */}
+          {/* 2D / 3D Mode Toggle Button — Pinned to the left of Find Me */}
+          {onToggle3D && (
+            <button
+              onClick={onToggle3D}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition shadow-sm shrink-0 ${
+                is3D
+                  ? 'bg-[#3D1860] text-white shadow-md'
+                  : 'bg-white/95 backdrop-blur-sm text-[#3D1860] border border-[#BB99CD] hover:bg-[#F5EDF7]'
+              }`}
+              title="Toggle 2D / 3D Map View"
+            >
+              <Box className="w-3.5 h-3.5 text-[#643579]" />
+              <span>{is3D ? '3D View' : '2D View'}</span>
+            </button>
+          )}
+
+          {/* Find Me — pinned to the right */}
           <button
             onClick={onFindMe}
             disabled={locating}

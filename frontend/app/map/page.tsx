@@ -75,6 +75,13 @@ export default function MapPage() {
 
   const toggleHotspots = () => setFilters((prev) => ({ ...prev, hotspotsOnly: !prev.hotspotsOnly }));
 
+  const [is3D, setIs3D] = useState(false);
+
+  const handleToggle3D = useCallback(() => {
+    civicMapRef.current?.toggle3D();
+    setIs3D((prev) => !prev);
+  }, []);
+
   return (
     /* Full viewport — no navbar, no footer. Pure map experience like Rapido */
     <div className="fixed inset-0 overflow-hidden bg-gray-900">
@@ -102,6 +109,8 @@ export default function MapPage() {
         displayedCount={displayedFacilities.length}
         onFindMe={handleFindMe}
         locating={locating}
+        onToggle3D={handleToggle3D}
+        is3D={is3D}
       />
 
       {/* ── Loading toast ── */}
