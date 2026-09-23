@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Sparkles, MapPin, ArrowRight, ShieldCheck, Flame } from 'lucide-react';
+import { Sparkles, MapPin, Flag, ArrowRight, ShieldCheck, Flame } from 'lucide-react';
 
 interface HeroSectionProps {
   onReportClick: () => void;
@@ -29,8 +29,7 @@ export default function HeroSection({ onReportClick, onViewMapClick }: HeroSecti
 
         {/* Tagline Pill */}
         <div className="inline-flex items-center space-x-2 bg-white text-gray-800 text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-full shadow-md mb-6">
-          <Sparkles className="w-3.5 h-3.5 text-blue-600 fill-blue-600" />
-          <span>A Keralam Municipal &amp; Civic Tech Initiative</span>
+          <span>A XyphX Solutions for Civic</span>
         </div>
 
         {/* 3D Big Heading */}
@@ -54,8 +53,8 @@ export default function HeroSection({ onReportClick, onViewMapClick }: HeroSecti
             onClick={onReportClick}
             className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-white text-gray-900 hover:bg-gray-50 px-7 py-3.5 rounded-full font-bold text-sm sm:text-base shadow-xl hover:shadow-2xl transition transform active:scale-95"
           >
-            <ArrowRight className="w-4 h-4 text-blue-600" />
-            <span>Sign In to Report Issue</span>
+            <Flag className="w-4 h-4 text-blue-600" />
+            <span>Report Issue</span>
           </button>
 
           <Link

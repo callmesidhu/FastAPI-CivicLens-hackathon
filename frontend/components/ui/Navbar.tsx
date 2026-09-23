@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Ticket, LogIn, Sparkles, MapPin } from 'lucide-react';
+import { Ticket, Flag, Sparkles, MapPin } from 'lucide-react';
 
 interface NavbarProps {
   onOpenTrackTicket: () => void;
@@ -47,11 +47,11 @@ export default function Navbar({ onOpenTrackTicket, onOpenReport }: NavbarProps)
           </button>
 
           <button
-            onClick={onOpenTrackTicket}
-            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 sm:px-5 py-2 rounded-full shadow-sm hover:shadow transition transform active:scale-95"
+            onClick={onOpenReport || onOpenTrackTicket}
+            className="flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 sm:px-5 py-2 rounded-full shadow-sm hover:shadow transition transform active:scale-95"
           >
-            <LogIn className="w-4 h-4" />
-            <span>Sign In</span>
+            <Flag className="w-4 h-4" />
+            <span>Report Issue</span>
           </button>
         </div>
       </div>
