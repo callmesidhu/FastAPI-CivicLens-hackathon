@@ -1,8 +1,6 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { Facility } from '@/types';
 
-/** Bump this when the schema changes. */
-const DB_VERSION = 2;
 /** Cache warm-up: fetch all facilities if stale beyond this threshold (ms). */
 export const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -10,7 +8,6 @@ interface CivicLensDB extends DBSchema {
   facilities: {
     key: string;
     value: Facility;
-    indexes: { 'by-type': string };
   };
   metadata: {
     key: string;
@@ -44,37 +41,20 @@ export async function getDB() {
   if (typeof window === 'undefined') return null;
 
   if (!dbPromise) {
-    dbPromise = openDB<CivicLensDB>('civiclens-db', DB_VERSION, {
-      upgrade(db, oldVersion) {
-        // ── v1 stores ──
-        if (oldVersion < 1) {
-          if (!db.objectStoreNames.contains('facilities')) {
-            db.createObjectStore('facilities', { keyPath: 'id' });
-          }
-          if (!db.objectStoreNames.contains('metadata')) {
-            db.createObjectStore('metadata', { keyPath: 'id' });
-          }
-          if (!db.objectStoreNames.contains('pendingReports')) {
-            const reportStore = db.createObjectStore('pendingReports', { keyPath: 'localReportId' });
-            reportStore.createIndex('by-status', 'status');
-          }
-          if (!db.objectStoreNames.contains('tickets')) {
-            db.createObjectStore('tickets', { keyPath: 'ticketNumber' });
-          }
+    dbPromise = openDB<CivicLensDB>('civiclens-db', 1, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains('facilities')) {
+          db.createObjectStore('facilities', { keyPath: 'id' });
         }
-
-        // ── v2: add by-type index on facilities ──
-        if (oldVersion < 2) {
-          const facilityStore = db.objectStoreNames.contains('facilities')
-            ? (db as unknown as IDBDatabase).transaction?.(['facilities'] as string[], 'versionchange')
-                ?.objectStore?.('facilities')
-            : null;
-          // Safer: just recreate index if missing via the upgrade transaction
-          // (IDBPDatabase upgrade gives us the transaction implicitly)
-          try {
-            const tx = (db as unknown as { transaction: IDBDatabase['transaction'] });
-            void tx; // no-op; index creation below via the raw IDBDatabase
-          } catch { /* ignore */ }
+        if (!db.objectStoreNames.contains('metadata')) {
+          db.createObjectStore('metadata', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('pendingReports')) {
+          const reportStore = db.createObjectStore('pendingReports', { keyPath: 'localReportId' });
+          reportStore.createIndex('by-status', 'status');
+        }
+        if (!db.objectStoreNames.contains('tickets')) {
+          db.createObjectStore('tickets', { keyPath: 'ticketNumber' });
         }
       },
     });
