@@ -19,6 +19,7 @@ interface MapBottomSheetProps {
   filters: DashboardFilterState;
   onFilterChange: (f: DashboardFilterState) => void;
   onFindMe?: () => void;
+  onGetDirections?: (f: Facility) => void;
 }
 
 function conditionBadge(condition: string) {
@@ -84,10 +85,11 @@ function FacilityRow({ facility, isSelected, onClick }: { facility: Facility; is
   );
 }
 
-function SelectedFacilityCard({ facility, onClose, onReportIssue }: {
+function SelectedFacilityCard({ facility, onClose, onReportIssue, onGetDirections }: {
   facility: Facility;
   onClose: () => void;
   onReportIssue: (f: Facility) => void;
+  onGetDirections?: (f: Facility) => void;
 }) {
   const badge = conditionBadge(facility.condition);
   let formattedDate = 'Recently';
@@ -116,7 +118,7 @@ function SelectedFacilityCard({ facility, onClose, onReportIssue }: {
             </p>
           </div>
         </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -162,10 +164,16 @@ function SelectedFacilityCard({ facility, onClose, onReportIssue }: {
         </div>
       )}
 
-      {/* Action Buttons row: Directions + Report Issue */}
+      {/* Action Buttons row: In-App Directions + Report Issue */}
       <div className="flex gap-2.5 pt-1 pb-3">
         <button
-          onClick={openNavigation}
+          onClick={() => {
+            if (onGetDirections) {
+              onGetDirections(facility);
+            } else {
+              openNavigation();
+            }
+          }}
           className="flex-1 flex items-center justify-center gap-1.5 bg-[#F5EDF7] hover:bg-[#BB99CD]/30 text-[#3D1860] border border-[#BB99CD]/40 font-bold text-xs py-2.5 rounded-xl transition cursor-pointer active:scale-98"
         >
           <Navigation className="w-3.5 h-3.5 fill-[#643579] text-[#643579]" />
@@ -192,6 +200,7 @@ export default function MapBottomSheet({
   filters,
   onFilterChange,
   onFindMe,
+  onGetDirections,
 }: MapBottomSheetProps) {
   const [expanded, setExpanded] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<'condition' | 'availability' | 'radius' | null>(null);
@@ -378,6 +387,7 @@ export default function MapBottomSheet({
                 facility={selectedFacility}
                 onClose={() => onSelectFacility(null)}
                 onReportIssue={onReportIssue}
+                onGetDirections={onGetDirections}
               />
             </div>
           )}

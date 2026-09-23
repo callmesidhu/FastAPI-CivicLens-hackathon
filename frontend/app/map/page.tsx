@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useCallback } from 'react';
 import useSWR from 'swr';
-import CivicMap, { CivicMapHandle } from '@/components/map/Map';
+import CivicMap, { CivicMapHandle, MapRoute } from '@/components/map/Map';
 import MapSearchBar from '@/components/map/MapSearchBar';
 import MapBottomSheet from '@/components/map/MapBottomSheet';
 import ReportForm from '@/components/reports/ReportForm';
@@ -19,6 +19,7 @@ export default function MapPage() {
   const { location, requestLocation } = useLocation();
   const civicMapRef = useRef<CivicMapHandle>(null);
   const [locating, setLocating] = useState(false);
+  const [activeRoute, setActiveRoute] = useState<MapRoute | null>(null);
 
   const handleFindMe = useCallback(() => {
     setLocating(true);
@@ -81,6 +82,66 @@ export default function MapPage() {
     setIs3D((prev) => !prev);
   }, []);
 
+  const handleGetDirections = useCallback(async (facility: Facility) => {
+    const destLat = facility.latitude;
+    const destLng = facility.longitude;
+    if (!destLat || !destLng) return;
+
+    try {
+      const res = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${activeLng},${activeLat};${destLng},${destLat}?overview=full&geometries=geojson`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.routes && data.routes[0]) {
+          const route = data.routes[0];
+          setActiveRoute({
+            coordinates: route.geometry.coordinates,
+            distanceMeters: route.distance,
+            durationSeconds: route.duration,
+            destinationName: facility.name,
+          });
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('OSRM routing failed, using fallback direct route:', e);
+    }
+
+    // Direct route fallback if OSRM is offline
+    const dLat = (destLat - activeLat) * (Math.PI / 180);
+    const dLng = (destLng - activeLng) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(activeLat * (Math.PI / 180)) *
+        Math.cos(destLat * (Math.PI / 180)) *
+        Math.sin(dLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const dist = 6371000 * c;
+    const dur = Math.max(60, (dist / 1000) * 120);
+
+    const mid1: [number, number] = [
+      activeLng + (destLng - activeLng) * 0.33,
+      activeLat + (destLat - activeLat) * 0.33,
+    ];
+    const mid2: [number, number] = [
+      activeLng + (destLng - activeLng) * 0.66,
+      activeLat + (destLat - activeLat) * 0.66,
+    ];
+
+    setActiveRoute({
+      coordinates: [
+        [activeLng, activeLat],
+        mid1,
+        mid2,
+        [destLng, destLat],
+      ],
+      distanceMeters: dist,
+      durationSeconds: dur,
+      destinationName: facility.name,
+    });
+  }, [activeLat, activeLng]);
+
   return (
     /* Full viewport — no navbar, no footer. Pure map experience like Rapido */
     <div className="fixed inset-0 overflow-hidden bg-gray-900">
@@ -98,6 +159,8 @@ export default function MapPage() {
           showHotspots={filters.hotspotsOnly}
           radius={filters.radius}
           is3D={is3D}
+          activeRoute={activeRoute}
+          onClearRoute={() => setActiveRoute(null)}
         />
       </div>
 
@@ -147,6 +210,7 @@ export default function MapPage() {
         filters={filters}
         onFilterChange={setFilters}
         onFindMe={handleFindMe}
+        onGetDirections={handleGetDirections}
       />
 
       {/* Offline sync widget */}
