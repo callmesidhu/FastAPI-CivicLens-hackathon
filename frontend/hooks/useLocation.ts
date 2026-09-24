@@ -53,20 +53,34 @@ export function useLocation(): UseLocationReturn {
     enabled: trackingEnabled,
   });
 
+  const lastUpdateRef = useRef<number>(0);
+  const lastCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
+
   /** Called for every GPS position update */
   const handlePosition = useCallback(
     (position: GeolocationPosition) => {
       const { latitude, longitude, accuracy } = position.coords;
+      const now = Date.now();
+      const last = lastCoordsRef.current;
 
-      setLocation({
-        latitude,
-        longitude,
-        accuracy: accuracy ?? null,
-        permissionGranted: true,
-        permissionDenied: false,
-      });
+      // Update state if first fix, moved > ~50m, or at least 60 seconds have passed
+      const movedSignificantly = !last || (Math.hypot(latitude - last.lat, longitude - last.lng) > 0.0005);
+      const oneMinutePassed = now - lastUpdateRef.current >= 60_000;
 
-      setIsRequesting(false);
+      if (movedSignificantly || oneMinutePassed) {
+        lastUpdateRef.current = now;
+        lastCoordsRef.current = { lat: latitude, lng: longitude };
+
+        setLocation({
+          latitude,
+          longitude,
+          accuracy: accuracy ?? null,
+          permissionGranted: true,
+          permissionDenied: false,
+        });
+
+        setIsRequesting(false);
+      }
 
       // Stream to backend
       send({
@@ -101,7 +115,7 @@ export function useLocation(): UseLocationReturn {
     watchIdRef.current = navigator.geolocation.watchPosition(
       handlePosition,
       handleError,
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 0 },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 30_000 },
     );
 
     setTrackingEnabled(true);

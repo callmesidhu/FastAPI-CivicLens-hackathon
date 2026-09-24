@@ -55,15 +55,24 @@ export default function MapPage() {
     [activeLat, activeLng],
   );
 
+  // Stabilize query coordinates (~110m grid) so GPS micro-jitter doesn't trigger SWR refetches
+  const stableLat = Number(activeLat.toFixed(3));
+  const stableLng = Number(activeLng.toFixed(3));
+
   const { data: rawFacilities, error, isLoading } = useSWR(
-    ['facilities', filters.type, filters.status, filters.radius, activeLat, activeLng, filters.searchQuery],
+    ['facilities', filters.type, filters.status, filters.radius, stableLat, stableLng, filters.searchQuery],
     () => fetchFacilities(
       filters.type === 'all' ? undefined : (filters.type === 'water' ? 'drinking_water' : filters.type),
       filters.status === 'all' ? undefined : filters.status,
       undefined, undefined, { latitude: activeLat, longitude: activeLng, permissionGranted: true, permissionDenied: false },
       filters.radius, filters.searchQuery
     ),
-    { revalidateOnFocus: false, revalidateOnReconnect: false }
+    { 
+      revalidateOnFocus: false, 
+      revalidateOnReconnect: false,
+      refreshInterval: 60_000, // Steady 1-minute refresher
+      dedupingInterval: 15_000,
+    }
   );
 
   const allFacilities = useMemo(() => rawFacilities || [], [rawFacilities]);
