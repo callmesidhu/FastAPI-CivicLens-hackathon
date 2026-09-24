@@ -9,6 +9,18 @@ export interface LocationState {
   permissionDenied: boolean;
 }
 
+export function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    if (process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL.startsWith('http')) {
+      return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, '');
+    }
+    return `${window.location.origin}/api`;
+  }
+  return process.env.INTERNAL_BACKEND_URL 
+    ? `${process.env.INTERNAL_BACKEND_URL}/api` 
+    : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api');
+}
+
 export async function fetchFacilities(
   type?: string,
   condition?: string,
@@ -48,19 +60,20 @@ export async function fetchFacilities(
     return facilities;
   }
 
-  let url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/facilities`);
+  const apiBase = getApiBaseUrl();
+  let url = new URL(`${apiBase}/facilities`);
   
-  const userLat = location?.latitude ?? 10.0070408;
-  const userLng = location?.longitude ?? 76.3656069;
+  const userLat = location?.latitude;
+  const userLng = location?.longitude;
 
   if (searchQuery) {
-    url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/facilities/search`);
+    url = new URL(`${apiBase}/facilities/search`);
     url.searchParams.append('q', searchQuery);
-  } else if (userLat && userLng) {
-    url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/facilities/nearby`);
+  } else if (userLat != null && userLng != null && radius && radius > 0) {
+    url = new URL(`${apiBase}/facilities/nearby`);
     url.searchParams.append('lat', userLat.toString());
     url.searchParams.append('lng', userLng.toString());
-    if (radius) url.searchParams.append('radius', radius.toString());
+    url.searchParams.append('radius', radius.toString());
   }
   
   if (!searchQuery) {
@@ -92,7 +105,7 @@ export async function uploadImage(file: File | Blob, filename: string = "image.j
   // Ensure we have a File object or at least a Blob with a filename
   formData.append('file', file, filename);
 
-  const url = `${process.env.NEXT_PUBLIC_API_URL}/uploads/`;
+  const url = `${getApiBaseUrl()}/uploads/`;
   const res = await fetch(url, {
     method: 'POST',
     body: formData,
@@ -145,7 +158,7 @@ export async function submitReport(
     };
   }
 
-  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/reports`;
+  const url = `${getApiBaseUrl()}/reports`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 
@@ -173,7 +186,7 @@ export async function fetchTicket(ticketNumber: string) {
     throw new Error('Ticket not found in local cache');
   }
 
-  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/tickets/${ticketNumber}`;
+  const url = `${getApiBaseUrl()}/tickets/${ticketNumber}`;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) {
     throw new Error('Failed to fetch ticket');
@@ -184,7 +197,7 @@ export async function fetchTicket(ticketNumber: string) {
 }
 
 export async function loginUser(email: string, password: string) {
-  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/auth/login`;
+  const url = `${getApiBaseUrl()}/auth/login`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -200,7 +213,7 @@ export async function loginUser(email: string, password: string) {
 }
 
 export async function registerUser(email: string, password: string, name: string, role: string = 'citizen', ward?: string, department?: string) {
-  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/auth/register`;
+  const url = `${getApiBaseUrl()}/auth/register`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -216,7 +229,7 @@ export async function registerUser(email: string, password: string, name: string
 }
 
 export async function fetchUserTickets(userEmail?: string, ticketNumbers?: string[]) {
-  const baseUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/tickets/`;
+  const baseUrl = `${getApiBaseUrl()}/tickets/`;
   const params = new URLSearchParams();
   if (userEmail) params.append('userEmail', userEmail);
   if (ticketNumbers && ticketNumbers.length > 0) {
@@ -233,7 +246,7 @@ export async function fetchUserTickets(userEmail?: string, ticketNumbers?: strin
 }
 
 export async function fetchAllTickets(status?: string) {
-  const baseUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/tickets/`;
+  const baseUrl = `${getApiBaseUrl()}/tickets/`;
   const url = status && status !== 'all' ? `${baseUrl}?status=${encodeURIComponent(status)}` : baseUrl;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) {
@@ -243,7 +256,7 @@ export async function fetchAllTickets(status?: string) {
 }
 
 export async function claimTicket(ticketNumber: string, userEmail: string) {
-  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/tickets/${ticketNumber}/claim`;
+  const url = `${getApiBaseUrl()}/tickets/${ticketNumber}/claim`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -264,7 +277,7 @@ export async function updateTicketStatus(
   department?: string,
   resolvedBy?: string
 ) {
-  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/tickets/${ticketNumber}/status`;
+  const url = `${getApiBaseUrl()}/tickets/${ticketNumber}/status`;
   const res = await fetch(url, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -291,7 +304,7 @@ export async function updateTicketStatus(
 export function getFullImageUrl(url?: string | null): string {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+  const apiBase = getApiBaseUrl();
   const hostBase = apiBase.replace(/\/api\/?$/, '');
   return `${hostBase}${url.startsWith('/') ? '' : '/'}${url}`;
 }
@@ -300,7 +313,7 @@ export async function createFacility(
   facilityData: any,
   userRole: string = 'citizen'
 ) {
-  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/facilities?userRole=${userRole}`;
+  const url = `${getApiBaseUrl()}/facilities?userRole=${userRole}`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -318,7 +331,7 @@ export async function verifyFacility(
   userId: string,
   userRole: string = 'citizen'
 ) {
-  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/facilities/${facilityId}/verify?userId=${userId}&userRole=${userRole}`;
+  const url = `${getApiBaseUrl()}/facilities/${facilityId}/verify?userId=${userId}&userRole=${userRole}`;
   const res = await fetch(url, {
     method: 'POST',
   });
@@ -336,7 +349,7 @@ export async function submitRating(
   feedback?: string,
   userEmail?: string
 ) {
-  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/ratings`;
+  const url = `${getApiBaseUrl()}/ratings`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -350,12 +363,64 @@ export async function submitRating(
 }
 
 export async function getRatings(facilityId: string) {
-  const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/ratings/${facilityId}`;
+  const url = `${getApiBaseUrl()}/ratings/${facilityId}`;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) {
     throw new Error('Failed to fetch ratings');
   }
   return await res.json();
 }
+
+export async function fetchAllFacilitiesAdmin(): Promise<Facility[]> {
+  const url = `${getApiBaseUrl()}/facilities?status=all`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error('Failed to fetch facilities list');
+  }
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function importFacilitiesCSV(file: File): Promise<{ success: boolean; importedCount: number; errors: string[]; message: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const url = `${getApiBaseUrl()}/facilities/bulk-import`;
+  const res = await fetch(url, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to bulk import facilities');
+  }
+  return await res.json();
+}
+
+export async function deleteFacility(facilityId: string): Promise<any> {
+  const url = `${getApiBaseUrl()}/facilities/${facilityId}`;
+  const res = await fetch(url, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to delete facility');
+  }
+  return await res.json();
+}
+
+export async function updateFacilityCondition(facilityId: string, condition: string): Promise<Facility> {
+  const url = `${getApiBaseUrl()}/facilities/${facilityId}/condition`;
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ condition }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to update facility condition');
+  }
+  return await res.json();
+}
+
 
 

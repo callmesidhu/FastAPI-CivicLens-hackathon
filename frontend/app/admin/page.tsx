@@ -4,7 +4,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
-import { updateTicketStatus, uploadImage, getFullImageUrl, fetchAllTickets } from '@/lib/api';
+import { updateTicketStatus, uploadImage, getFullImageUrl, fetchAllTickets, fetchAllFacilitiesAdmin } from '@/lib/api';
+import { Facility } from '@/types';
+import FacilityDirectory from '@/components/admin/FacilityDirectory';
+import BulkImportModal from '@/components/admin/BulkImportModal';
+import AdminAnalyticsReports from '@/components/admin/AdminAnalyticsReports';
 import {
   Building2,
   Clock,
@@ -29,6 +33,10 @@ import {
   FileText,
   AlertCircle,
   Eye,
+  BarChart3,
+  Compass,
+  Layers,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 
@@ -51,6 +59,14 @@ export default function AdminPage() {
       router.push('/login');
     }
   }, [user, router]);
+
+  // Tabs state: 'tickets' | 'directory' | 'analytics'
+  const [activeTab, setActiveTab] = useState<'tickets' | 'directory' | 'analytics'>('tickets');
+
+  // Facilities inventory state
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [isLoadingFacilities, setIsLoadingFacilities] = useState(true);
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
 
   // Data state strictly from backend
   const [tickets, setTickets] = useState<any[]>([]);
@@ -91,9 +107,23 @@ export default function AdminPage() {
     }
   };
 
+  // Load backend facilities
+  const loadBackendFacilities = async (showFullLoading = false) => {
+    if (showFullLoading) setIsLoadingFacilities(true);
+    try {
+      const data = await fetchAllFacilitiesAdmin();
+      setFacilities(data);
+    } catch (err: any) {
+      console.error('Failed to load facilities from backend', err);
+    } finally {
+      if (showFullLoading) setIsLoadingFacilities(false);
+    }
+  };
+
   useEffect(() => {
     if (user?.role === 'admin') {
       loadBackendTickets(true);
+      loadBackendFacilities(true);
     }
   }, [user?.role]);
 
@@ -278,14 +308,25 @@ export default function AdminPage() {
           </div>
 
           {/* Action Controls */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2.5">
             <button
-              onClick={() => loadBackendTickets()}
-              disabled={isLoading}
-              className="flex items-center space-x-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs px-3.5 py-2 rounded-xl transition cursor-pointer"
-              title="Refresh tickets from backend"
+              onClick={() => setShowBulkImportModal(true)}
+              className="hidden sm:inline-flex items-center space-x-1.5 bg-[#3D1860] hover:bg-[#643579] text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs transition cursor-pointer"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-[#643579]' : ''}`} />
+              <Upload className="w-3.5 h-3.5" />
+              <span>Import CSV</span>
+            </button>
+
+            <button
+              onClick={() => {
+                loadBackendTickets();
+                loadBackendFacilities();
+              }}
+              disabled={isLoading || isLoadingFacilities}
+              className="flex items-center space-x-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs px-3.5 py-2 rounded-xl transition cursor-pointer"
+              title="Refresh data from backend"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading || isLoadingFacilities ? 'animate-spin text-[#643579]' : ''}`} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
 
@@ -310,6 +351,65 @@ export default function AdminPage() {
           </div>
         </div>
       </header>
+
+      {/* Sub-header Navigation Tabs */}
+      <div className="bg-white border-b border-gray-200 sticky top-18 z-30 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between overflow-x-auto no-scrollbar">
+          <div className="flex space-x-1 sm:space-x-3 py-1">
+            <button
+              onClick={() => setActiveTab('tickets')}
+              className={`py-3 px-3.5 font-bold text-xs flex items-center space-x-2 border-b-2 transition shrink-0 cursor-pointer ${
+                activeTab === 'tickets'
+                  ? 'border-[#3D1860] text-[#3D1860]'
+                  : 'border-transparent text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              <span>Grievance Tickets</span>
+              <span className="bg-rose-100 text-rose-700 text-[10px] font-black px-2 py-0.5 rounded-full ml-1">
+                {openCount} Open
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('directory')}
+              className={`py-3 px-3.5 font-bold text-xs flex items-center space-x-2 border-b-2 transition shrink-0 cursor-pointer ${
+                activeTab === 'directory'
+                  ? 'border-[#3D1860] text-[#3D1860]'
+                  : 'border-transparent text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              <Compass className="w-4 h-4" />
+              <span>Facility Directory</span>
+              <span className="bg-purple-100 text-[#3D1860] text-[10px] font-black px-2 py-0.5 rounded-full ml-1">
+                {facilities.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`py-3 px-3.5 font-bold text-xs flex items-center space-x-2 border-b-2 transition shrink-0 cursor-pointer ${
+                activeTab === 'analytics'
+                  ? 'border-[#3D1860] text-[#3D1860]'
+                  : 'border-transparent text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>Analytics &amp; Data Reports</span>
+            </button>
+          </div>
+
+          <div className="sm:hidden flex items-center py-2">
+            <button
+              onClick={() => setShowBulkImportModal(true)}
+              className="inline-flex items-center space-x-1.5 bg-[#3D1860] text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Import</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Main Admin Dashboard */}
       <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-6">
@@ -337,7 +437,10 @@ export default function AdminPage() {
               <span>Backend Connection Notice: {fetchError}. Ensure FastAPI is running on port 8000.</span>
             </div>
             <button
-              onClick={() => loadBackendTickets()}
+              onClick={() => {
+                loadBackendTickets();
+                loadBackendFacilities();
+              }}
               className="text-xs font-bold text-rose-700 underline hover:text-rose-900"
             >
               Retry
@@ -345,8 +448,30 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Metric Cards (Image 2 style) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* TAB 1: Facility Directory (Without Map) */}
+        {activeTab === 'directory' && (
+          <FacilityDirectory
+            facilities={facilities}
+            isLoading={isLoadingFacilities}
+            onRefresh={() => loadBackendFacilities(false)}
+            onOpenBulkImport={() => setShowBulkImportModal(true)}
+            onShowNotification={showNotification}
+          />
+        )}
+
+        {/* TAB 2: Data Analysis Reports & Graphs */}
+        {activeTab === 'analytics' && (
+          <AdminAnalyticsReports
+            facilities={facilities}
+            tickets={tickets}
+          />
+        )}
+
+        {/* TAB 3: Grievance Tickets Workflow */}
+        {activeTab === 'tickets' && (
+          <>
+            {/* Metric Cards (Image 2 style) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Card 1: Pending Action */}
           <div
             onClick={() => setStatusFilter('open')}
@@ -734,7 +859,9 @@ export default function AdminPage() {
             })}
           </div>
         )}
-      </main>
+      </>
+    )}
+  </main>
 
       {/* Resolution Dialog Modal */}
       {resolvingTicket && (
@@ -882,6 +1009,18 @@ export default function AdminPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Bulk CSV Import Modal */}
+      {showBulkImportModal && (
+        <BulkImportModal
+          onClose={() => setShowBulkImportModal(false)}
+          onSuccess={() => {
+            loadBackendFacilities(true);
+            loadBackendTickets(true);
+            showNotification('Facilities dataset imported successfully!');
+          }}
+        />
       )}
     </div>
   );

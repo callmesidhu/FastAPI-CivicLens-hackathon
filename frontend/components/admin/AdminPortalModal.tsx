@@ -23,7 +23,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { updateTicketStatus, uploadImage, getFullImageUrl } from '@/lib/api';
+import { updateTicketStatus, uploadImage, getFullImageUrl, getApiBaseUrl } from '@/lib/api';
 
 interface AdminPortalModalProps {
   isOpen: boolean;
@@ -54,7 +54,7 @@ export default function AdminPortalModal({ isOpen, onClose }: AdminPortalModalPr
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
 
-  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/tickets${
+  const apiUrl = `${getApiBaseUrl()}/tickets${
     statusFilter !== 'all' ? `?status=${statusFilter}` : ''
   }`;
 

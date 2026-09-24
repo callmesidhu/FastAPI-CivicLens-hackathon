@@ -68,10 +68,12 @@ const STREET_STYLE = process.env.NEXT_PUBLIC_MAP_STYLE_URL || 'https://basemaps.
 
 /** Map radius → zoom level so the full circle fits the viewport */
 function radiusToZoom(metres: number): number {
+  if (metres <= 0)     return 10.5;
   if (metres <= 1000)  return 17;
   if (metres <= 5000)  return 16.2;
   if (metres <= 10000) return 15.6;
-  return 14; // 50 km
+  if (metres <= 50000) return 13.5;
+  return 11.5; // 100 km+
 }
 
 /**
@@ -157,12 +159,10 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
 
   // Auto-zoom when the radius filter changes
   useEffect(() => {
-    if (radius == null || !mapRef.current) return;
+    if (radius == null || !mapRef.current || !userLocation) return;
     const zoom = radiusToZoom(radius);
-    const lng = userLocation?.lng || 76.3656;
-    const lat = userLocation?.lat || 10.0070;
-    mapRef.current.flyTo({ center: [lng, lat], zoom, duration: 900, essential: true });
-  }, [radius]); // eslint-disable-line react-hooks/exhaustive-deps
+    mapRef.current.flyTo({ center: [userLocation.lng, userLocation.lat], zoom, duration: 900, essential: true });
+  }, [radius, userLocation]);
 
   // Handle 2D vs 3D camera pitch and bearing smoothly with easeTo (no controlled state fighting)
   useEffect(() => {
@@ -305,6 +305,9 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
   };
 
   const activeMapStyle = mapMode === 'satellite' ? SATELLITE_STYLE : STREET_STYLE;
+  const firstFacility = facilities[0];
+  const initialLongitude = userLocation?.lng ?? firstFacility?.longitude ?? 76.3656069;
+  const initialLatitude = userLocation?.lat ?? firstFacility?.latitude ?? 10.0070408;
 
   return (
     <div className="w-full h-full relative rounded-2xl overflow-hidden shadow-inner">
@@ -313,8 +316,8 @@ const CivicMap = forwardRef<CivicMapHandle, CivicMapProps>(function CivicMap({
         mapLib={maplibregl}
         reuseMaps
         initialViewState={{
-          longitude: userLocation?.lng || 76.3656,
-          latitude: userLocation?.lat || 10.0070,
+          longitude: initialLongitude,
+          latitude: initialLatitude,
           zoom: radius ? radiusToZoom(radius) : 14,
           pitch: is3D ? 65 : 0,
           bearing: is3D ? -25 : 0,

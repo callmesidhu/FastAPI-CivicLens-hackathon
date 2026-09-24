@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Query, HTTPException, Depends
+from fastapi import APIRouter, Query, HTTPException, Depends, UploadFile, File, Body
 from typing import Optional, List
+import csv
+import io
 from app.schemas.facility import FacilityListResponse, FacilityResponse, RouteSearchRequest, FacilityCreate
 from app.db.database import db
 from app.core.config import settings
@@ -368,3 +370,136 @@ async def verify_facility(
         doc["verifications"] = verifications
         
     return {"message": "Verification successful", "facility": format_facility(doc)}
+
+@router.post("/bulk-import")
+async def bulk_import_facilities(file: UploadFile = File(...)):
+    """
+    Bulk import facilities from a CSV file.
+    Expected CSV columns:
+    name, type, latitude, longitude, address, condition, availability, wheelchairAccessible
+    """
+    content = await file.read()
+    try:
+        decoded = content.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        decoded = content.decode("latin-1")
+
+    reader = csv.DictReader(io.StringIO(decoded))
+    collection = get_collection()
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    docs_to_insert = []
+    errors = []
+    row_idx = 1
+
+    for row in reader:
+        row_idx += 1
+        name = row.get("name", "").strip()
+        if not name:
+            errors.append(f"Row {row_idx}: Missing facility name")
+            continue
+
+        raw_type = row.get("type", "").strip().lower()
+        if raw_type in ["water", "drinking_water", "drinking water"]:
+            facility_type = "drinking_water"
+        elif raw_type in ["toilet", "restroom", "washroom"]:
+            facility_type = "toilet"
+        else:
+            errors.append(f"Row {row_idx}: Invalid type '{raw_type}'. Must be 'toilet' or 'drinking_water'")
+            continue
+
+        try:
+            lat = float(row.get("latitude", row.get("lat", 0)))
+            lng = float(row.get("longitude", row.get("lng", row.get("lon", 0))))
+        except (ValueError, TypeError):
+            errors.append(f"Row {row_idx}: Invalid numeric coordinates for '{name}'")
+            continue
+
+        if lat == 0 and lng == 0:
+            errors.append(f"Row {row_idx}: Coordinates cannot be 0,0 for '{name}'")
+            continue
+
+        address = row.get("address", "").strip() or f"{name}, Kochi"
+        condition = row.get("condition", "usable").strip().lower()
+        if condition not in ["clean", "usable", "broken", "locked", "no_water"]:
+            condition = "usable"
+
+        availability = row.get("availability", "24/7").strip() or "24/7"
+        raw_wc = str(row.get("wheelchairAccessible", row.get("wheelchair", "false"))).strip().lower()
+        wheelchair_accessible = raw_wc in ["true", "yes", "1", "y"]
+
+        doc = {
+            "name": name,
+            "type": facility_type,
+            "location": {
+                "type": "Point",
+                "coordinates": [lng, lat]
+            },
+            "address": address,
+            "accessibility": {
+                "wheelchairAccessible": wheelchair_accessible
+            },
+            "availability": availability,
+            "condition": condition,
+            "lastUpdated": now_iso,
+            "status": "active",
+            "submittedBy": "admin_bulk_import",
+            "verifications": ["admin_imported"]
+        }
+        docs_to_insert.append(doc)
+
+    if docs_to_insert:
+        res = await collection.insert_many(docs_to_insert)
+        return {
+            "success": True,
+            "importedCount": len(res.inserted_ids),
+            "errors": errors,
+            "message": f"Successfully imported {len(res.inserted_ids)} facilities."
+        }
+    else:
+        return {
+            "success": False,
+            "importedCount": 0,
+            "errors": errors if errors else ["No valid data rows found in CSV"],
+            "message": "No facilities were imported."
+        }
+
+@router.delete("/{facility_id}")
+async def delete_facility(facility_id: str):
+    """Delete a facility by ObjectId."""
+    collection = get_collection()
+    try:
+        obj_id = ObjectId(facility_id)
+    except Exception:
+        raise HTTPException(status_code=422, detail="Invalid facility ID format")
+
+    res = await collection.delete_one({"_id": obj_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Facility not found")
+
+    return {"message": "Facility successfully deleted", "id": facility_id}
+
+@router.patch("/{facility_id}/condition")
+async def update_facility_condition(facility_id: str, payload: dict = Body(...)):
+    """Update condition of a facility."""
+    collection = get_collection()
+    try:
+        obj_id = ObjectId(facility_id)
+    except Exception:
+        raise HTTPException(status_code=422, detail="Invalid facility ID format")
+
+    new_condition = payload.get("condition")
+    if new_condition not in ["clean", "usable", "broken", "locked", "no_water"]:
+        raise HTTPException(status_code=400, detail="Invalid condition value. Must be clean, usable, broken, locked, or no_water")
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    res = await collection.update_one(
+        {"_id": obj_id},
+        {"$set": {"condition": new_condition, "lastUpdated": now_iso}}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Facility not found")
+
+    updated = await collection.find_one({"_id": obj_id})
+    return format_facility(updated)
+

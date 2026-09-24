@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CivicLens — Frontend (Next.js 16)
 
-## Getting Started
+This is the web frontend for **CivicLens**, an offline-first public facility discovery, verification, and crowdsourced reporting application built for the **ANAVANDI Hackathon 2026**.
 
-First, run the development server:
+For complete system documentation, architecture diagrams, and hackathon declarations, refer to the root [README.md](../README.md).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Tech Stack
+- **Framework**: Next.js 16 (App Router)
+- **Library**: React 19, TypeScript
+- **Styling**: Tailwind CSS v4, Lucide React icons
+- **Mapping**: MapLibre GL JS, React Map GL, Carto Voyager vector basemap
+- **State & Data Fetching**: SWR (with coordinate jitter stabilization)
+- **Offline Engine**: IndexedDB (`idb`) caching facilities, tickets, and report sync queue
+- **Conversational AI**: Groq Cloud SDK (`qwen/qwen3.8-27b`) via `/api/chat` with live RAG facility injection
+- **Real-Time Geolocation**: Continuous GPS watching with live WebSocket streaming to the backend (`/api/location/ws/{session_id}`)
+
+---
+
+## Environment Configuration
+
+Create a `.env.local` file in this directory based on `.env.example`:
+
+```env
+# Backend API Base URL
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+
+# Internal URL for server-side fetches (Docker networking)
+INTERNAL_BACKEND_URL=http://backend:8000
+
+# Basemap Style
+NEXT_PUBLIC_MAP_STYLE_URL=https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json
+
+# Live Location Tracking WebSocket
+NEXT_PUBLIC_WS_URL=ws://localhost:8000
+
+# Groq Cloud API Key for CivicCare AI
+GROQ_API_KEY=your_groq_api_key_here
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Development Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# 1. Install dependencies
+npm install
 
-## Learn More
+# 2. Run the development server
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Main Map & Reporting**: [http://localhost:3000/map](http://localhost:3000/map)
+- **Municipal Officer Admin Portal**: [http://localhost:3000/admin](http://localhost:3000/admin)
+- **Login / Account Switcher**: [http://localhost:3000/login](http://localhost:3000/login)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Production Build
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run build
+npm run start
+```

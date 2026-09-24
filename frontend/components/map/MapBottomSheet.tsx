@@ -261,6 +261,8 @@ export default function MapBottomSheet({
   ];
 
   const radiusOpts = [
+    { value: 0, label: 'All Facilities', desc: 'Show all facilities without radius limit' },
+    { value: 100000, label: '100 km Radius', desc: 'Regional coverage (includes Kochi & Kakkanad)' },
     { value: 50000, label: '50 km Radius', desc: 'Citywide coverage around location' },
     { value: 10000, label: '10 km Radius', desc: 'District area around location' },
     { value: 5000, label: '5 km Radius', desc: 'Neighborhood vicinity' },
