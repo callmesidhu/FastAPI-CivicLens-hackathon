@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+// Groq client will be instantiated lazily inside the route handler
 
 const API_BASE =
   process.env.BACKEND_API_URL ??
@@ -81,6 +81,8 @@ export async function POST(req: NextRequest) {
     // Run facility fetch and LLM call concurrently where possible
     const facilityContext = await getFacilityContext(lat, lng);
     const systemPrompt = buildSystemPrompt(facilityContext);
+
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || 'dummy_build_key' });
 
     const completion = await groq.chat.completions.create({
       model: 'qwen/qwen3.8-27b',     // only confirmed-working model on this account
