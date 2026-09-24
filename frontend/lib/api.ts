@@ -69,11 +69,11 @@ export async function fetchFacilities(
   if (searchQuery) {
     url = new URL(`${apiBase}/facilities/search`);
     url.searchParams.append('q', searchQuery);
-  } else if (userLat != null && userLng != null) {
+  } else if (userLat != null && userLng != null && radius && radius > 0) {
     url = new URL(`${apiBase}/facilities/nearby`);
     url.searchParams.append('lat', userLat.toString());
     url.searchParams.append('lng', userLng.toString());
-    if (radius) url.searchParams.append('radius', radius.toString());
+    url.searchParams.append('radius', radius.toString());
   }
   
   if (!searchQuery) {
@@ -370,5 +370,57 @@ export async function getRatings(facilityId: string) {
   }
   return await res.json();
 }
+
+export async function fetchAllFacilitiesAdmin(): Promise<Facility[]> {
+  const url = `${getApiBaseUrl()}/facilities?status=all`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error('Failed to fetch facilities list');
+  }
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function importFacilitiesCSV(file: File): Promise<{ success: boolean; importedCount: number; errors: string[]; message: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const url = `${getApiBaseUrl()}/facilities/bulk-import`;
+  const res = await fetch(url, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to bulk import facilities');
+  }
+  return await res.json();
+}
+
+export async function deleteFacility(facilityId: string): Promise<any> {
+  const url = `${getApiBaseUrl()}/facilities/${facilityId}`;
+  const res = await fetch(url, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to delete facility');
+  }
+  return await res.json();
+}
+
+export async function updateFacilityCondition(facilityId: string, condition: string): Promise<Facility> {
+  const url = `${getApiBaseUrl()}/facilities/${facilityId}/condition`;
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ condition }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to update facility condition');
+  }
+  return await res.json();
+}
+
 
 

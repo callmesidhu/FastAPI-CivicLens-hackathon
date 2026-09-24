@@ -68,10 +68,12 @@ const STREET_STYLE = process.env.NEXT_PUBLIC_MAP_STYLE_URL || 'https://basemaps.
 
 /** Map radius → zoom level so the full circle fits the viewport */
 function radiusToZoom(metres: number): number {
+  if (metres <= 0)     return 10.5;
   if (metres <= 1000)  return 17;
   if (metres <= 5000)  return 16.2;
   if (metres <= 10000) return 15.6;
-  return 14; // 50 km
+  if (metres <= 50000) return 13.5;
+  return 11.5; // 100 km+
 }
 
 /**
