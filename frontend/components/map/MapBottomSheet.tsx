@@ -7,9 +7,10 @@ import {
   ChevronUp, ChevronDown, Flag, Navigation, Flame, AlertTriangle,
   CheckCircle2, Lock, DropletOff, Info, Droplet, Users, MapPin,
   ShieldCheck, X, Accessibility, Ruler, Check, RotateCcw, SlidersHorizontal, Filter,
-  ChevronLeft, ChevronRight, Building2
+  ChevronLeft, ChevronRight, Building2, Star
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import RatingsView from '@/components/facilities/RatingsView';
 
 interface MapBottomSheetProps {
   facilities: Facility[];
@@ -167,8 +168,8 @@ function SelectedFacilityCard({ facility, onClose, onReportIssue, onGetDirection
         </div>
       )}
 
-      {/* Action Buttons row: In-App Directions + Report Issue */}
-      <div className="flex gap-2.5 pt-1 pb-3">
+      {/* Action Buttons row: In-App Directions + Report Issue + Rate */}
+      <div className="flex gap-2 pt-1 pb-3">
         <button
           onClick={() => {
             if (onGetDirections) {
@@ -177,18 +178,32 @@ function SelectedFacilityCard({ facility, onClose, onReportIssue, onGetDirection
               openNavigation();
             }
           }}
-          className="flex-1 flex items-center justify-center gap-1.5 bg-[#F5EDF7] hover:bg-[#BB99CD]/30 text-[#3D1860] border border-[#BB99CD]/40 font-bold text-xs py-2.5 rounded-xl transition cursor-pointer active:scale-98"
+          className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 bg-[#F5EDF7] hover:bg-[#BB99CD]/30 text-[#3D1860] border border-[#BB99CD]/40 font-bold text-[10px] sm:text-xs py-2 rounded-xl transition cursor-pointer active:scale-98"
         >
           <Navigation className="w-3.5 h-3.5 fill-[#643579] text-[#643579]" />
-          Directions
+          <span>Directions</span>
         </button>
         <button
           onClick={() => onReportIssue(facility)}
-          className="flex-1 flex items-center justify-center gap-1.5 bg-[#3D1860] hover:bg-[#643579] text-white font-bold text-xs py-2.5 rounded-xl shadow-xs transition cursor-pointer active:scale-98"
+          className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-[10px] sm:text-xs py-2 rounded-xl shadow-xs transition cursor-pointer active:scale-98"
         >
           <Flag className="w-3.5 h-3.5" />
-          Report Issue
+          <span>Report</span>
         </button>
+        <button
+          onClick={() => {
+            // we will toggle a local state for showing ratings
+            document.getElementById(`ratings-${facility.id}`)?.classList.toggle('hidden');
+          }}
+          className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 bg-[#3D1860] hover:bg-[#643579] text-white font-bold text-[10px] sm:text-xs py-2 rounded-xl shadow-xs transition cursor-pointer active:scale-98"
+        >
+          <Star className="w-3.5 h-3.5 fill-current" />
+          <span>Rate</span>
+        </button>
+      </div>
+
+      <div id={`ratings-${facility.id}`} className="pb-4 hidden">
+        <RatingsView facilityId={facility.id} />
       </div>
     </div>
   );
