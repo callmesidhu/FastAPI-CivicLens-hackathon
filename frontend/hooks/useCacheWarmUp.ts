@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { isCacheStale, cacheFacilities, getLastSyncTime, getCachedFacilityCount } from '@/lib/db';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api';
+import { getApiBaseUrl } from '@/lib/api';
 
 interface WarmUpState {
   /** ISO timestamp of last successful background sync, or null if never. */
@@ -55,10 +54,7 @@ export function useCacheWarmUp(): WarmUpState {
 
     try {
       // Fetch all facilities (no filters, large radius = all data)
-      const url = new URL(`${API_BASE}/facilities/nearby`);
-      url.searchParams.set('lat', '10.0070408');
-      url.searchParams.set('lng', '76.3656069');
-      url.searchParams.set('radius', '100000'); // 100 km — captures all of Kochi region
+      const url = new URL(`${getApiBaseUrl()}/facilities`);
 
       const res = await fetch(url.toString(), { cache: 'no-store' });
       if (!res.ok) throw new Error(`Warm-up fetch failed: ${res.status}`);

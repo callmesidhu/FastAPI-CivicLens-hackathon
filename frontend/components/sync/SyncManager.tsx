@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { getPendingReports, updateReportStatus, cacheTicket } from '@/lib/db';
-import { uploadImage } from '@/lib/api';
+import { uploadImage, getApiBaseUrl } from '@/lib/api';
 import { RefreshCw } from 'lucide-react';
 
 /**
@@ -82,7 +82,7 @@ export default function SyncManager() {
           }
         }
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports`, {
+        const res = await fetch(`${getApiBaseUrl()}/reports`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

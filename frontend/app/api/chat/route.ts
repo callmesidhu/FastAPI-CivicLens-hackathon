@@ -17,16 +17,18 @@ interface CachedFacilities {
 const facilityCache = new Map<string, CachedFacilities>();
 const CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
 
-/** Return compact 1-line facility context, cached per lat/lng bucket */
-async function getFacilityContext(lat: number, lng: number): Promise<string> {
+/** Return compact 1-line facility context, cached per location bucket. */
+async function getFacilityContext(lat: number | null, lng: number | null): Promise<string> {
   // Bucket to ~0.01 degrees (~1 km) so nearby users share the same cache entry
-  const key = `${lat.toFixed(2)},${lng.toFixed(2)}`;
+  const key = lat != null && lng != null ? `${lat.toFixed(2)},${lng.toFixed(2)}` : 'all';
   const cached = facilityCache.get(key);
   if (cached && Date.now() < cached.expiresAt) return cached.context;
 
   try {
-    // Fetch facilities within 5km radius (limit 5) — compact 1-line format keeps tokens low
-    const url = `${API_BASE}/facilities/nearby?lat=${lat}&lng=${lng}&radius=5000&limit=5`;
+    // Fetch nearby facilities when GPS is available, otherwise use the full facility list.
+    const url = lat != null && lng != null
+      ? `${API_BASE}/facilities/nearby?lat=${lat}&lng=${lng}&radius=5000&limit=5`
+      : `${API_BASE}/facilities?limit=5`;
     const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(3000) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
@@ -75,8 +77,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid messages' }, { status: 400 });
     }
 
-    const lat = typeof userLat === 'number' ? userLat : 10.0070408;
-    const lng = typeof userLng === 'number' ? userLng : 76.3656069;
+    const lat = typeof userLat === 'number' ? userLat : null;
+    const lng = typeof userLng === 'number' ? userLng : null;
 
     // Run facility fetch and LLM call concurrently where possible
     const facilityContext = await getFacilityContext(lat, lng);

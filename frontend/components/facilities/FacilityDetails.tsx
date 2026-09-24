@@ -109,7 +109,7 @@ export default function FacilityDetails({ facility, onClose }: FacilityDetailsPr
                 <p className="text-[#643579] mt-0.5 text-xs">A user recently reported a change in condition. Not yet verified.</p>
               </div>
             </div>
-          ) : facility.status === 'pending' && (
+          ) : facility.status === 'pending' ? (
             <div className="mb-4 bg-purple-50 border border-purple-200 text-purple-800 px-3 py-2 rounded-lg text-sm flex items-start justify-between">
               <div className="flex items-start">
                 <ShieldCheck className="w-5 h-5 mr-2 shrink-0 text-purple-500" />
@@ -122,7 +122,7 @@ export default function FacilityDetails({ facility, onClose }: FacilityDetailsPr
                 Verify
               </button>
             </div>
-          ) : isStale && (
+          ) : isStale ? (
             <div className="mb-4 bg-orange-50 border border-orange-200 text-orange-800 px-3 py-2 rounded-lg text-sm flex items-start">
               <AlertTriangle className="w-5 h-5 mr-2 shrink-0 text-orange-500" />
               <div>
@@ -130,7 +130,7 @@ export default function FacilityDetails({ facility, onClose }: FacilityDetailsPr
                 <p className="text-orange-700/80 mt-0.5 text-xs">Please verify before relying on this facility.</p>
               </div>
             </div>
-          )}
+          ) : null}
         
           <div className="flex justify-between items-start mb-4">
             <div>

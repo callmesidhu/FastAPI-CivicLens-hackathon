@@ -50,14 +50,18 @@ export default function MapPage() {
 
   const activeLat = location.latitude ?? 10.0070408;
   const activeLng = location.longitude ?? 76.3656069;
-  const memoUserLocation = useMemo(() => ({ lat: activeLat, lng: activeLng }), [activeLat, activeLng]);
+  const memoUserLocation = useMemo(
+    () => ({ lat: activeLat, lng: activeLng }),
+    [activeLat, activeLng],
+  );
 
   const { data: rawFacilities, error, isLoading } = useSWR(
     ['facilities', filters.type, filters.status, filters.radius, activeLat, activeLng, filters.searchQuery],
     () => fetchFacilities(
       filters.type === 'all' ? undefined : (filters.type === 'water' ? 'drinking_water' : filters.type),
       filters.status === 'all' ? undefined : filters.status,
-      undefined, undefined, { latitude: activeLat, longitude: activeLng, permissionGranted: true, permissionDenied: false }, filters.radius, filters.searchQuery
+      undefined, undefined, { latitude: activeLat, longitude: activeLng, permissionGranted: true, permissionDenied: false },
+      filters.radius, filters.searchQuery
     ),
     { revalidateOnFocus: false, revalidateOnReconnect: false }
   );
@@ -91,7 +95,7 @@ export default function MapPage() {
   const handleGetDirections = useCallback(async (facility: Facility) => {
     const destLat = facility.latitude;
     const destLng = facility.longitude;
-    if (!destLat || !destLng) return;
+    if (!destLat || !destLng || activeLat == null || activeLng == null) return;
 
     try {
       const res = await fetch(
@@ -254,20 +258,22 @@ export default function MapPage() {
       )}
 
       {/* Add Missing Facility FAB */}
-      <button
-        onClick={() => setShowAddFacility(true)}
-        className="absolute bottom-24 right-4 z-30 md:bottom-8 md:right-8 bg-[#3D1860] text-white p-4 rounded-full shadow-2xl hover:bg-[#643579] transition-transform hover:scale-110 flex items-center justify-center group"
-      >
-        <Plus className="w-6 h-6" />
-        <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap group-hover:ml-2 font-bold text-sm">
-          Add Facility
-        </span>
-      </button>
+      {memoUserLocation && (
+        <button
+          onClick={() => setShowAddFacility(true)}
+          className="absolute bottom-24 right-4 z-30 md:bottom-8 md:right-8 bg-[#3D1860] text-white p-4 rounded-full shadow-2xl hover:bg-[#643579] transition-transform hover:scale-110 flex items-center justify-center group"
+        >
+          <Plus className="w-6 h-6" />
+          <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap group-hover:ml-2 font-bold text-sm">
+            Add Facility
+          </span>
+        </button>
+      )}
 
-      {showAddFacility && (
+      {showAddFacility && memoUserLocation && (
         <AddFacilityForm
-          initialLat={activeLat}
-          initialLng={activeLng}
+          initialLat={memoUserLocation.lat}
+          initialLng={memoUserLocation.lng}
           onClose={() => setShowAddFacility(false)}
           onSuccess={(facility) => {
             setShowAddFacility(false);
